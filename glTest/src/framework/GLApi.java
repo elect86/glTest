@@ -3,19 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gltest;
+package framework;
 
 /**
  *
  * @author GBarbieri
  */
-public class GlTest {
+public class GLApi {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
-    }
-    
+    public static final int OpenGLGeneric = 0;
+    public static final int OpenGLCore = 1;
+    public static final int MAX = 2;
 }
