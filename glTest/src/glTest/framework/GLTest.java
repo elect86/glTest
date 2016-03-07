@@ -14,6 +14,7 @@ public class GLTest {
     public static void main(String[] args) {
 
         ApplicationState app = new ApplicationState();
+        app.setup();
     }
 
 }

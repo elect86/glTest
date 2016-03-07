@@ -5,12 +5,12 @@
  */
 package glTest.framework;
 
-import static com.jogamp.opengl.GL3ES3.GL_ALREADY_SIGNALED;
-import static com.jogamp.opengl.GL3ES3.GL_CONDITION_SATISFIED;
-import static com.jogamp.opengl.GL3ES3.GL_SYNC_FLUSH_COMMANDS_BIT;
-import static com.jogamp.opengl.GL3ES3.GL_SYNC_GPU_COMMANDS_COMPLETE;
-import static com.jogamp.opengl.GL3ES3.GL_WAIT_FAILED;
-import com.jogamp.opengl.GL3;
+import static com.jogamp.opengl.GL4ES3.GL_ALREADY_SIGNALED;
+import static com.jogamp.opengl.GL4ES3.GL_CONDITION_SATISFIED;
+import static com.jogamp.opengl.GL4ES3.GL_SYNC_FLUSH_COMMANDS_BIT;
+import static com.jogamp.opengl.GL4ES3.GL_SYNC_GPU_COMMANDS_COMPLETE;
+import static com.jogamp.opengl.GL4ES3.GL_WAIT_FAILED;
+import com.jogamp.opengl.GL4;
 
 /**
  *
@@ -40,12 +40,12 @@ public class RingBuffer {
         fence = new long[sectors];
     }
 
-    public void wait(GL3 gl3) {
+    public void wait(GL4 gl4) {
         if (fence[writeId] > 0) {
             int waitFlags = 0;
             long waitDuration = 0;
             while (true) {
-                int waitRet = gl3.glClientWaitSync(fence[writeId], waitFlags, waitDuration);
+                int waitRet = gl4.glClientWaitSync(fence[writeId], waitFlags, waitDuration);
                 if (waitRet == GL_ALREADY_SIGNALED || waitRet == GL_CONDITION_SATISFIED) {
                     return;
                 }
@@ -65,20 +65,20 @@ public class RingBuffer {
         }
     }
 
-    public void lockAndUpdate(GL3 gl3) {
-        lock(gl3);
+    public void lockAndUpdate(GL4 gl4) {
+        lock(gl4);
         update();
     }
 
-    public void lock(GL3 gl3) {
+    public void lock(GL4 gl4) {
         /**
          * glDeleteSync will silently ignore a sync value of zero, but there is
          * no need to query OpenGL if not needed.
          */
         if (fence[bindId] > 0) {
-            gl3.glDeleteSync(fence[bindId]);
+            gl4.glDeleteSync(fence[bindId]);
         }
-        fence[bindId] = gl3.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        fence[bindId] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 
     public void update() {

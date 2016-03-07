@@ -5,7 +5,7 @@
  */
 package glTest.solutions;
 
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 import glm.mat._4.Mat4;
 
 /**
@@ -18,7 +18,7 @@ public abstract class Solution {
     protected int width;
     protected int height;
     
-    public abstract void shutdown(GL3 gl3);
+    public abstract void shutdown(GL4 gl4);
 
     // The name of this solution.
     public abstract String getName();

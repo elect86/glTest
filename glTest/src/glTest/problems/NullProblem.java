@@ -8,7 +8,7 @@ package glTest.problems;
 import glTest.problems.Problem;
 import static com.jogamp.opengl.GL.GL_COLOR_BUFFER_BIT;
 import static com.jogamp.opengl.GL.GL_DEPTH_BUFFER_BIT;
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 import glm.vec._4.Vec4;
 
 /**
@@ -18,19 +18,19 @@ import glm.vec._4.Vec4;
 public class NullProblem extends Problem {
 
     @Override
-    public boolean init(GL3 gl3) {
+    public boolean init(GL4 gl4) {
         // Nothing to initialize
         return true;
     }
 
     @Override
-    public void render(GL3 gl3) {
+    public void render(GL4 gl4) {
     
         // Nothing, because it's the NULL solution.
     }
 
     @Override
-    public void clear(GL3 gl3) {
+    public void clear(GL4 gl4) {
     
     }
 
@@ -39,11 +39,11 @@ public class NullProblem extends Problem {
         return "NullProblem";
     }
 
-    public void clear(GL3 gl3, Vec4 clearColor, float clearDepth) {
+    public void clear(GL4 gl4, Vec4 clearColor, float clearDepth) {
 
-        gl3.glClearColor(0.2f, 0.0f, 0.0f, 1.0f);
-        gl3.glClearDepth(1.0f);
-        gl3.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        gl4.glClearColor(0.2f, 0.0f, 0.0f, 1.0f);
+        gl4.glClearDepth(1.0f);
+        gl4.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
 }

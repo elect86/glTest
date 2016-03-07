@@ -5,7 +5,7 @@
  */
 package glTest.solutions;
 
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 
 /**
  *
@@ -13,14 +13,15 @@ import com.jogamp.opengl.GL3;
  */
 public class NullSolution extends Solution {
 
-    public boolean init(GL3 gl3) {
+    public boolean init(GL4 gl4) {
         return true;
     }
 
-    public void render(GL3 gl3) {
+    public void render(GL4 gl4) {
     }
 
-    public void shutdown(GL3 gl3) {
+    @Override
+    public void shutdown(GL4 gl4) {
     }
 
     @Override

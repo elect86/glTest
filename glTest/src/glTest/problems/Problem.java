@@ -5,8 +5,7 @@
  */
 package glTest.problems;
 
-import com.jogamp.opengl.GL3;
-import glTest.framework.GLApi;
+import com.jogamp.opengl.GL4;
 import glTest.solutions.Solution;
 
 /**
@@ -17,19 +16,19 @@ public abstract class Problem {
 
     protected Solution activeSolution;
 
-    public boolean init(GL3 gl3) {
+    public boolean init(GL4 gl4) {
         return false;
     }
 
-    public void render(GL3 gl3) {
+    public void render(GL4 gl4) {
 
     }
 
-    public void shutdown(GL3 gl3) {
+    public void shutdown(GL4 gl4) {
 
     }
 
-    public void clear(GL3 gl3) {
+    public void clear(GL4 gl4) {
 
     }
 
@@ -37,13 +36,13 @@ public abstract class Problem {
         return "";
     }
 
-    public boolean setSolution(GL3 gl3, Solution solution) {
+    public boolean setSolution(GL4 gl4, Solution solution) {
 
         assert (solution == null || solution.getProblemName().equals(getName()));
 
         if (activeSolution != null) {
             System.out.println("Solution " + activeSolution.getName() + " - shutdown beginning.");
-            activeSolution.shutdown(gl3);
+            activeSolution.shutdown(gl4);
             System.out.println("Solution " + activeSolution.getName() + " - shutdown complete.");
         }
 

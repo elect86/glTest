@@ -8,7 +8,7 @@ package glTest.framework;
 import glTest.problems.NullProblem;
 import glTest.problems.Problem;
 import glTest.solutions.Solution;
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 import java.util.ArrayList;
 import java.util.HashMap;
 import glTest.problems.DynamicStreamingProblem;
@@ -24,39 +24,46 @@ import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapUnsynchronized;
 public class ProblemFactory {
 
     private ArrayList<Problem> problems = new ArrayList<>();
-    private HashMap<String, Solution> solutions = new HashMap<>();
+    private HashMap<String, Solution[]> solutions = new HashMap<>();
 
-    public ProblemFactory(GL3 gl3, boolean skipInit) {
+    public ProblemFactory(GL4 gl4, boolean skipInit) {
 
         Problem newProbl;
 
-        // Null
+        /**
+         * Null.
+         */
         newProbl = new NullProblem();
 
-        if (skipInit || newProbl.init(gl3)) {
+        if (skipInit || newProbl.init(gl4)) {
             if (!skipInit) {
-                newProbl.shutdown(gl3);
+                newProbl.shutdown(gl4);
             }
             problems.add(newProbl);
-            solutions.put(newProbl.getName(), new NullSolution());
+            solutions.put(newProbl.getName(), new Solution[]{
+                new NullSolution()});
         } else {
-            newProbl.shutdown(gl3);
+            newProbl.shutdown(gl4);
             System.err.println("Unable to create the Null Problem--exiting.");
         }
 
-        // DynamicStreaming
+        /**
+         * DynamicStreaming.
+         */
         newProbl = new DynamicStreamingProblem();
 
-        if (skipInit || newProbl.init(gl3)) {
+        if (skipInit || newProbl.init(gl4)) {
             if (!skipInit) {
-                newProbl.shutdown(gl3);
+                newProbl.shutdown(gl4);
             }
             problems.add(newProbl);
-            solutions.put(newProbl.getName(), new DynamicStreamingGLBufferSubData());
-            solutions.put(newProbl.getName(), new DynamicStreamingGLMapUnsynchronized());
-            solutions.put(newProbl.getName(), new DynamicStreamingGLMapPersistent());
+            solutions.put(newProbl.getName(), new Solution[]{
+                new DynamicStreamingGLBufferSubData(),
+                new DynamicStreamingGLMapUnsynchronized(),
+                new DynamicStreamingGLMapPersistent()
+            });
         } else {
-            newProbl.shutdown(gl3);
+            newProbl.shutdown(gl4);
         }
     }
 
@@ -64,7 +71,10 @@ public class ProblemFactory {
         return problems;
     }
 
-    public HashMap<String, Solution> getSolutions() {
-        return solutions;
+    public Solution[] getSolutions(Problem problem) {
+
+        assert (problem != null);
+        
+        return solutions.get(problem.getName());
     }
 }

@@ -7,7 +7,7 @@ package glTest.problems;
 
 import static com.jogamp.opengl.GL.GL_COLOR_BUFFER_BIT;
 import static com.jogamp.opengl.GL.GL_DEPTH_BUFFER_BIT;
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glm.vec._2.Vec2;
 import glm.vec._4.Vec4;
@@ -28,7 +28,8 @@ public class DynamicStreamingProblem extends Problem {
     private int vertexCount = particleCount * vertsPerParticle;
     private int particleBufferSize = Vec2.SIZE * vertexCount;
 
-    public boolean init() {
+    @Override
+    public boolean init(GL4 gl4) {
 
         vertexData = GLBuffers.newDirectByteBuffer(particleCount * vertsPerParticle * Vec2.SIZE);
 
@@ -36,7 +37,7 @@ public class DynamicStreamingProblem extends Problem {
     }
 
     @Override
-    public void render(GL3 gl3) {
+    public void render(GL4 gl4) {
 
         // TODO: Update should be moved into its own thread, but for now let's just do it here.
         update();
@@ -84,10 +85,10 @@ public class DynamicStreamingProblem extends Problem {
         return "DynamicStreaming";
     }
 
-    public void clear(GL3 gl3, Vec4 clearColor, float clearDepth) {
+    public void clear(GL4 gl4, Vec4 clearColor, float clearDepth) {
 
-        gl3.glClearColor(0.3f, 0.0f, 0.3f, 1.0f);
-        gl3.glClearDepth(1.0f);
-        gl3.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        gl4.glClearColor(0.3f, 0.0f, 0.3f, 1.0f);
+        gl4.glClearDepth(1.0f);
+        gl4.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 }

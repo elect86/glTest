@@ -19,7 +19,7 @@ import static com.jogamp.opengl.GL.GL_NO_ERROR;
 import static com.jogamp.opengl.GL.GL_SCISSOR_TEST;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GL4;
 import static com.jogamp.opengl.GL4.GL_MAP_COHERENT_BIT;
 import static com.jogamp.opengl.GL4.GL_MAP_PERSISTENT_BIT;
@@ -42,20 +42,20 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
     private ByteBuffer vertexDataPointer;
 
     @Override
-    public boolean init(GL3 gl3, int maxVertexCount) {
+    public boolean init(GL4 gl4, int maxVertexCount) {
 
-        if (!gl3.isExtensionAvailable("GL_ARB_buffer_storage")) {
+        if (!gl4.isExtensionAvailable("GL_ARB_buffer_storage")) {
             System.err.println("Unable to initialize solution '" + getName()
                     + "', glBufferStorage(), i.e. v, unavailable");
         }
 
         // Uniform Buffer
-        gl3.glGenBuffers(1, uniformBuffer);
+        gl4.glGenBuffers(1, uniformBuffer);
 
         // Program
         String[] uniformNames = new String[]{"CB0"};
         uniformLocation = new int[1];
-        program = GLUtilities.createProgram(gl3, "streaming_vb_gl_vs.glsl", "streaming_vb_gl_fs.glsl",
+        program = GLUtilities.createProgram(gl4, "streaming_vb_gl_vs.glsl", "streaming_vb_gl_fs.glsl",
                 uniformNames, uniformLocation);
 
         if (program == 0) {
@@ -65,61 +65,61 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         }
 
         // Dynamic vertex buffer
-        gl3.glGenBuffers(1, vertexBuffer);
-        gl3.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
+        gl4.glGenBuffers(1, vertexBuffer);
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
 
         ringBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * maxVertexCount);
 //        particleBufferSize = GLApi.tripleBuffer * Vec2.SIZE * maxVertexCount;
         particleBufferSize = ringBuffer.size;
 
         int flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-        ((GL4) gl3).glBufferStorage(GL_ARRAY_BUFFER, particleBufferSize, null, flags);
-        vertexDataPointer = gl3.glMapBufferRange(GL_ARRAY_BUFFER, 0, particleBufferSize, flags);
+        ((GL4) gl4).glBufferStorage(GL_ARRAY_BUFFER, particleBufferSize, null, flags);
+        vertexDataPointer = gl4.glMapBufferRange(GL_ARRAY_BUFFER, 0, particleBufferSize, flags);
 
-        gl3.glGenVertexArrays(1, vao);
-        gl3.glBindVertexArray(vao.get(0));
+        gl4.glGenVertexArrays(1, vao);
+        gl4.glBindVertexArray(vao.get(0));
 
-        return gl3.glGetError() == GL_NO_ERROR;
+        return gl4.glGetError() == GL_NO_ERROR;
     }
 
     @Override
-    public void render(GL3 gl3, ByteBuffer vertices) {
+    public void render(GL4 gl4, ByteBuffer vertices) {
 
         // Program
-        gl3.glUseProgram(program);
+        gl4.glUseProgram(program);
 
         // Uniforms
         constants.putFloat(Float.BYTES * 0, +2.0f / width);
         constants.putFloat(Float.BYTES * 1, -2.0f / height);
 
-        gl3.glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer.get(0));
-        gl3.glBufferData(GL_UNIFORM_BUFFER, constants.capacity(), constants, GL_DYNAMIC_DRAW);
-        gl3.glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer.get(0));
+        gl4.glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer.get(0));
+        gl4.glBufferData(GL_UNIFORM_BUFFER, constants.capacity(), constants, GL_DYNAMIC_DRAW);
+        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer.get(0));
 
         // Input Layout
-        gl3.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl3.glVertexAttribPointer(0, 2, GL_FLOAT, false, Vec2.SIZE, 0);
-        gl3.glEnableVertexAttribArray(0);
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
+        gl4.glVertexAttribPointer(0, 2, GL_FLOAT, false, Vec2.SIZE, 0);
+        gl4.glEnableVertexAttribArray(0);
 
         // Rasterizer State
-        gl3.glDisable(GL_CULL_FACE);
-        gl3.glCullFace(GL_FRONT);
-        gl3.glDisable(GL_SCISSOR_TEST);
-        gl3.glViewport(0, 0, width, height);
+        gl4.glDisable(GL_CULL_FACE);
+        gl4.glCullFace(GL_FRONT);
+        gl4.glDisable(GL_SCISSOR_TEST);
+        gl4.glViewport(0, 0, width, height);
 
         // Blend State
-        gl3.glDisable(GL_BLEND);
-        gl3.glColorMask(true, true, true, true);
+        gl4.glDisable(GL_BLEND);
+        gl4.glColorMask(true, true, true, true);
 
         // Depth Stencil State
-        gl3.glDisable(GL_DEPTH_TEST);
-        gl3.glDepthMask(false);
+        gl4.glDisable(GL_DEPTH_TEST);
+        gl4.glDepthMask(false);
 
         int particleCount = (vertices.capacity() / Vec2.SIZE) / vertsPerParticle;
         int particleSizeBytes = vertsPerParticle * Vec2.SIZE;
         int startIndex = startDestOffset / Vec2.SIZE;
 
-        ringBuffer.wait(gl3);
+        ringBuffer.wait(gl4);
 
         for (int i = 0; i < particleCount; ++i) {
 
@@ -130,26 +130,26 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
                 vertexDataPointer.put(dstOffset+ j, vertices.get(vertexOffset + j));
             }
 
-            gl3.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
+            gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
         }
 
-        ringBuffer.lockAndUpdate(gl3);
+        ringBuffer.lockAndUpdate(gl4);
 
         startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleBufferSize;
     }
 
     @Override
-    public void shutdown(GL3 gl3) {
+    public void shutdown(GL4 gl4) {
     
-        gl3.glDisableVertexAttribArray(0);
-        gl3.glDeleteVertexArrays(1, vao);
+        gl4.glDisableVertexAttribArray(0);
+        gl4.glDeleteVertexArrays(1, vao);
         
-        gl3.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl3.glUnmapBuffer(GL_ARRAY_BUFFER);
-        gl3.glDeleteBuffers(1, vertexBuffer);
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
+        gl4.glUnmapBuffer(GL_ARRAY_BUFFER);
+        gl4.glDeleteBuffers(1, vertexBuffer);
         
-        gl3.glDeleteBuffers(1, uniformBuffer);
-        gl3.glDeleteProgram(program);
+        gl4.glDeleteBuffers(1, uniformBuffer);
+        gl4.glDeleteProgram(program);
         
         BufferUtils.destroyDirectBuffer(vao);
         BufferUtils.destroyDirectBuffer(vertexBuffer);

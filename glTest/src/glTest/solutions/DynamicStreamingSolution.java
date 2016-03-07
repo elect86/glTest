@@ -5,7 +5,7 @@
  */
 package glTest.solutions;
 
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glm.vec._4.Vec4;
 import java.nio.ByteBuffer;
@@ -26,12 +26,12 @@ public abstract class DynamicStreamingSolution extends Solution {
     protected int particleBufferSize;
     protected ByteBuffer constants = GLBuffers.newDirectByteBuffer(Vec4.SIZE);
     
-    public abstract boolean init(GL3 gl3, int maxVertexCount);
+    public abstract boolean init(GL4 gl4, int maxVertexCount);
 
-    public abstract void render(GL3 gl3, ByteBuffer vertices);
+    public abstract void render(GL4 gl4, ByteBuffer vertices);
 
     @Override
-    public abstract void shutdown(GL3 gl3);
+    public abstract void shutdown(GL4 gl4);
 
     @Override
     public abstract String getName();

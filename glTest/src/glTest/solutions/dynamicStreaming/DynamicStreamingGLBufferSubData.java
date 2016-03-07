@@ -6,7 +6,7 @@
 package glTest.solutions.dynamicStreaming;
 
 import static com.jogamp.opengl.GL2ES3.*;
-import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 import glTest.framework.BufferUtils;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
@@ -22,15 +22,15 @@ import glTest.solutions.DynamicStreamingSolution;
 public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
     @Override
-    public boolean init(GL3 gl3, int maxVertexCount) {
+    public boolean init(GL4 gl4, int maxVertexCount) {
 
         // Uniform Buffer
-        gl3.glGenBuffers(1, uniformBuffer);
+        gl4.glGenBuffers(1, uniformBuffer);
 
         // Program
         String[] uniformNames = new String[]{"CB0"};
         uniformLocation = new int[1];
-        program = GLUtilities.createProgram(gl3, "streaming_vb_gl_vs.glsl", "streaming_vb_gl_fs.glsl",
+        program = GLUtilities.createProgram(gl4, "streaming_vb_gl_vs.glsl", "streaming_vb_gl_fs.glsl",
                 uniformNames, uniformLocation);
 
         if (program == 0) {
@@ -43,48 +43,48 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         startDestOffset = 0;
         particleBufferSize = GLApi.tripleBuffer * Vec2.SIZE * maxVertexCount;
 
-        gl3.glGenBuffers(1, vertexBuffer);
-        gl3.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl3.glBufferData(GL_ARRAY_BUFFER, particleBufferSize, null, GL_DYNAMIC_DRAW);
+        gl4.glGenBuffers(1, vertexBuffer);
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
+        gl4.glBufferData(GL_ARRAY_BUFFER, particleBufferSize, null, GL_DYNAMIC_DRAW);
 
-        gl3.glGenVertexArrays(1, vao);
-        gl3.glBindVertexArray(vao.get(0));
+        gl4.glGenVertexArrays(1, vao);
+        gl4.glBindVertexArray(vao.get(0));
 
-        return gl3.glGetError() == GL_NO_ERROR;
+        return gl4.glGetError() == GL_NO_ERROR;
     }
 
     @Override
-    public void render(GL3 gl3, ByteBuffer vertices) {
+    public void render(GL4 gl4, ByteBuffer vertices) {
 
         // Program
-        gl3.glUseProgram(program);
+        gl4.glUseProgram(program);
 
         // Uniforms
         constants.putFloat(Float.BYTES * 0, +2.0f / width);
         constants.putFloat(Float.BYTES * 1, -2.0f / height);
 
-        gl3.glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer.get(0));
-        gl3.glBufferData(GL_UNIFORM_BUFFER, constants.capacity(), constants, GL_DYNAMIC_DRAW);
-        gl3.glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer.get(0));
+        gl4.glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer.get(0));
+        gl4.glBufferData(GL_UNIFORM_BUFFER, constants.capacity(), constants, GL_DYNAMIC_DRAW);
+        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer.get(0));
 
         // Input Layout
-        gl3.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl3.glVertexAttribPointer(0, 2, GL_FLOAT, false, Vec2.SIZE, 0);
-        gl3.glEnableVertexAttribArray(0);
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
+        gl4.glVertexAttribPointer(0, 2, GL_FLOAT, false, Vec2.SIZE, 0);
+        gl4.glEnableVertexAttribArray(0);
 
         // Rasterizer State
-        gl3.glDisable(GL_CULL_FACE);
-        gl3.glCullFace(GL_FRONT);
-        gl3.glDisable(GL_SCISSOR_TEST);
-        gl3.glViewport(0, 0, width, height);
+        gl4.glDisable(GL_CULL_FACE);
+        gl4.glCullFace(GL_FRONT);
+        gl4.glDisable(GL_SCISSOR_TEST);
+        gl4.glViewport(0, 0, width, height);
 
         // Blend State
-        gl3.glDisable(GL_BLEND);
-        gl3.glColorMask(true, true, true, true);
+        gl4.glDisable(GL_BLEND);
+        gl4.glColorMask(true, true, true, true);
 
         // Depth Stencil State
-        gl3.glDisable(GL_DEPTH_TEST);
-        gl3.glDepthMask(false);
+        gl4.glDisable(GL_DEPTH_TEST);
+        gl4.glDepthMask(false);
 
         int particleCount = (vertices.capacity() / Vec2.SIZE) / vertsPerParticle;
         int particleSizeBytes = vertsPerParticle * Vec2.SIZE;
@@ -97,28 +97,28 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
             int dstOffset = startDestOffset + (i * particleSizeBytes);
 
             vertices.position(srcOffset);
-            gl3.glBufferSubData(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes, vertices);
+            gl4.glBufferSubData(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes, vertices);
 
-            gl3.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
+            gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
         }
 
         startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleBufferSize;
 
         if (startDestOffset == 0) {
-            gl3.glBufferData(GL_ARRAY_BUFFER, particleBufferSize, null, GL_DYNAMIC_DRAW);
+            gl4.glBufferData(GL_ARRAY_BUFFER, particleBufferSize, null, GL_DYNAMIC_DRAW);
         }
     }
 
     @Override
-    public void shutdown(GL3 gl3) {
+    public void shutdown(GL4 gl4) {
 
-        gl3.glDisableVertexAttribArray(0);
-        gl3.glDeleteVertexArrays(1, vao);
+        gl4.glDisableVertexAttribArray(0);
+        gl4.glDeleteVertexArrays(1, vao);
 
-        gl3.glDeleteBuffers(1, vertexBuffer);
+        gl4.glDeleteBuffers(1, vertexBuffer);
 
-        gl3.glDeleteBuffers(1, uniformBuffer);
-        gl3.glDeleteProgram(program);
+        gl4.glDeleteBuffers(1, uniformBuffer);
+        gl4.glDeleteProgram(program);
         
         BufferUtils.destroyDirectBuffer(vao);
         BufferUtils.destroyDirectBuffer(vertexBuffer);
