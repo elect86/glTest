@@ -5,12 +5,12 @@
  */
 package glTest.problems;
 
-import static com.jogamp.opengl.GL.GL_COLOR_BUFFER_BIT;
-import static com.jogamp.opengl.GL.GL_DEPTH_BUFFER_BIT;
+import static com.jogamp.opengl.GL2ES3.GL_COLOR;
+import static com.jogamp.opengl.GL2ES3.GL_DEPTH;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
+import glTest.solutions.DynamicStreamingSolution;
 import glm.vec._2.Vec2;
-import glm.vec._4.Vec4;
 import java.nio.ByteBuffer;
 
 /**
@@ -22,16 +22,21 @@ public class DynamicStreamingProblem extends Problem {
     private ByteBuffer vertexData;
     private int iteration;
     public static int vertsPerParticle = 6;
-    private int particleCountX = 500;
-    private int particleCountY = 320;
-    private int particleCount = (particleCountX * particleCountY);
-    private int vertexCount = particleCount * vertsPerParticle;
+    public static int particleCountX = 500;
+    public static int particleCountY = 320;
+    public static int particleCount = (particleCountX * particleCountY);
+    public static int vertexCount = particleCount * vertsPerParticle;
     private int particleBufferSize = Vec2.SIZE * vertexCount;
 
     @Override
     public boolean init(GL4 gl4) {
 
-        vertexData = GLBuffers.newDirectByteBuffer(particleCount * vertsPerParticle * Vec2.SIZE);
+        super.init(gl4);
+
+        vertexData = GLBuffers.newDirectByteBuffer(vertexCount * Vec2.SIZE);
+
+        clearColor.put(new float[]{0.3f, 0.0f, 0.3f, 1.0f}).rewind();
+        clearDepth.put(new float[]{1.0f}).rewind();
 
         return true;
     }
@@ -39,11 +44,14 @@ public class DynamicStreamingProblem extends Problem {
     @Override
     public void render(GL4 gl4) {
 
+        gl4.glClearBufferfv(GL_COLOR, 0, clearColor);
+        gl4.glClearBufferfv(GL_DEPTH, 0, clearDepth);
+
         // TODO: Update should be moved into its own thread, but for now let's just do it here.
         update();
 
-        if (activeSolution != null) {
-//            activeSolution.r
+        if (getSolution() != null) {
+            ((DynamicStreamingSolution) solution).render(gl4, vertexData);
         }
     }
 
@@ -66,14 +74,26 @@ public class DynamicStreamingProblem extends Problem {
             for (int xPos = 0; xPos < particleCountX; ++xPos) {
                 float x = spacing + xPos * (spacing + w);
 
-                vertexData.putFloat(address * 2, x + offsetX + 0).putFloat(y + offsetY + 0);
-                vertexData.putFloat(address * 2, x + offsetX + w).putFloat(y + offsetY + 0);
-                vertexData.putFloat(address * 2, x + offsetX + 0).putFloat(y + offsetY + h);
-                vertexData.putFloat(address * 2, x + offsetX + w).putFloat(y + offsetY + 0);
-                vertexData.putFloat(address * 2, x + offsetX + 0).putFloat(y + offsetY + h);
-                vertexData.putFloat(address * 2, x + offsetX + w).putFloat(y + offsetY + h);
+                vertexData
+                        .putFloat(address + 0 * Vec2.SIZE + 0 * Float.BYTES, x + offsetX + 0)
+                        .putFloat(address + 0 * Vec2.SIZE + 1 * Float.BYTES, y + offsetY + 0);
+                vertexData
+                        .putFloat(address + 1 * Vec2.SIZE + 0 * Float.BYTES, x + offsetX + w)
+                        .putFloat(address + 1 * Vec2.SIZE + 1 * Float.BYTES, y + offsetY + 0);
+                vertexData
+                        .putFloat(address + 2 * Vec2.SIZE + 0 * Float.BYTES, x + offsetX + 0)
+                        .putFloat(address + 2 * Vec2.SIZE + 1 * Float.BYTES, y + offsetY + h);
+                vertexData
+                        .putFloat(address + 3 * Vec2.SIZE + 0 * Float.BYTES, x + offsetX + w)
+                        .putFloat(address + 3 * Vec2.SIZE + 1 * Float.BYTES, y + offsetY + 0);
+                vertexData
+                        .putFloat(address + 4 * Vec2.SIZE + 0 * Float.BYTES, x + offsetX + 0)
+                        .putFloat(address + 4 * Vec2.SIZE + 1 * Float.BYTES, y + offsetY + h);
+                vertexData
+                        .putFloat(address + 5 * Vec2.SIZE + 0 * Float.BYTES, x + offsetX + w)
+                        .putFloat(address + 5 * Vec2.SIZE + 1 * Float.BYTES, y + offsetY + h);
 
-                address += vertsPerParticle;
+                address += vertsPerParticle * Vec2.SIZE;
             }
         }
 
@@ -83,12 +103,5 @@ public class DynamicStreamingProblem extends Problem {
     @Override
     public String getName() {
         return "DynamicStreaming";
-    }
-
-    public void clear(GL4 gl4, Vec4 clearColor, float clearDepth) {
-
-        gl4.glClearColor(0.3f, 0.0f, 0.3f, 1.0f);
-        gl4.glClearDepth(1.0f);
-        gl4.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 }

@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import glTest.problems.Problem;
 import glTest.solutions.Solution;
 import java.nio.IntBuffer;
-import jogamp.opengl.FPSCounterImpl;
 
 /**
  *
@@ -46,21 +45,19 @@ import jogamp.opengl.FPSCounterImpl;
  */
 public class ApplicationState implements GLEventListener, KeyListener {
 
-    private Vec2i position = new Vec2i(0, 0);
-    private Vec2i resolution = new Vec2i(1024, 768);
+    public static final Vec2i RESOLUTION = new Vec2i(1024, 768);
     private ProblemFactory factory;
     private ArrayList<Problem> problems;
     private Solution[] solutions;
-    private final int inactiveProblem = -1;
-    private final int inactiveSolution = -1;
-    private int activeProblem;
-    private int activeSolution;
+    private Problem problem;
+    private Solution solution;
     public GLWindow glWindow;
-    public Animator animator;
+    public static Animator animator;
     public static boolean DEBUG = true;
     private IntBuffer vertexArrayObject = GLBuffers.newDirectIntBuffer(1);
-    private String rootTitle = "gltest";
-    private int seconds;
+    private final String rootTitle = "gltest";
+    private int offsetProblem = 0;
+    private int offsetSolution = 0;
 
     public void setup() {
 
@@ -95,7 +92,7 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         animator = new Animator(glWindow);
         animator.setRunAsFastAsPossible(true);
-        animator.setUpdateFPSFrames(10_000, System.out);
+        animator.setUpdateFPSFrames(FPSCounter.DEFAULT_FRAMES_PER_INTERVAL, System.out);
         animator.start();
     }
 
@@ -131,61 +128,58 @@ public class ApplicationState implements GLEventListener, KeyListener {
         gl4.glGenVertexArrays(1, vertexArrayObject);
         gl4.glBindVertexArray(vertexArrayObject.get(0));
 
-        factory = new ProblemFactory(gl4, false);
+        factory = new ProblemFactory();
         problems = factory.getProblems();
         assert (problems.size() > 0);
 
-        setInitialProblemAndSolution("NullProblem", "NullSolution");
+        setInitialProblemAndSolution(gl4, "NullProblem", "NullSolution");
     }
 
-    private void setInitialProblemAndSolution(String probName, String solnName) {
+    private void setInitialProblemAndSolution(GL4 gl4, String probName, String solnName) {
 
         for (int i = 0; i < problems.size(); i++) {
             if (problems.get(i).getName().equals(probName)) {
-                activeProblem = i;
+                problem = problems.get(i);
                 break;
             }
         }
 
-        solutions = factory.getSolutions(problems.get(activeProblem));
-        for (int i = 0; i < solutions.length; i++) {
-            if (solutions[i].getName().equals(solnName)) {
-                activeSolution = i;
+        solutions = factory.getSolutions(problem);
+        for (Solution sol : solutions) {
+            if (sol.getName().equals(solnName)) {
+                solution = sol;
                 break;
             }
         }
+
+        initProblem(gl4);
+
+        initSolution(gl4);
+
         onProblemOrSolutionSet();
     }
 
     @Override
     public void display(GLAutoDrawable drawable) {
-//        System.out.println("display "+animator.getTotalFPSDuration());
-        Problem activeProblem_ = getActiveProblem();
-
-        if (activeProblem_ == null) {
-            return;
-        }
 
         GL4 gl4 = drawable.getGL().getGL4();
 
-        activeProblem_.clear(gl4);
+        if (offsetProblem != 0) {
+            changeProblem(gl4);
+        }
+        if (offsetSolution != 0) {
+            changeSolution(gl4);
+        }
+
+        if (problem == null) {
+            return;
+        }
 
         // This is the main entry point shared by all tests. 
-        activeProblem_.render(gl4);
+        problem.render(gl4);
 
         // Present the results.
-        if (animator.getTotalFPSDuration() / 1_000 == seconds && !activeProblem_.getName().equals("NullProblem")) {
-            String fpsLastS = String.valueOf(animator.getLastFPS());
-            fpsLastS = fpsLastS.substring(0, fpsLastS.indexOf('.') + 2);
-            String fpsTotalS = String.valueOf(animator.getTotalFPS());
-            fpsTotalS = fpsTotalS.substring(0, fpsTotalS.indexOf('.') + 2);
-            System.out.println(animator.getTotalFPSDuration() / 1_000 + " s: " + animator.getUpdateFPSFrames() + " f / "
-                    + animator.getLastFPSPeriod() + " ms, " + fpsLastS + " fps, " + animator.getLastFPSPeriod()
-                    / animator.getUpdateFPSFrames() + " ms/f; " + "total: " + animator.getTotalFPSFrames() + " f, "
-                    + fpsTotalS + " fps, " + animator.getTotalFPSDuration() / animator.getTotalFPSFrames() + " ms/f");
-
-            seconds++;
-        }
+        // included in the animator
     }
 
     @Override
@@ -208,27 +202,6 @@ public class ApplicationState implements GLEventListener, KeyListener {
         System.exit(0);
     }
 
-    private void onProblemOrSolutionSet() {
-
-        String newTitle = rootTitle + " - " + getActiveProblem().getName();
-
-        if (getActiveSolution() != null) {
-            newTitle += " - " + solutions[activeSolution].getName();
-        }
-        glWindow.setTitle(newTitle);
-
-        seconds = 1;
-        animator.resetFPSCounter();
-    }
-
-    private Problem getActiveProblem() {
-        return activeProblem != inactiveProblem ? problems.get(activeProblem) : null;
-    }
-
-    private Solution getActiveSolution() {
-        return activeSolution != inactiveSolution ? solutions[activeSolution] : null;
-    }
-
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
@@ -236,7 +209,16 @@ public class ApplicationState implements GLEventListener, KeyListener {
                 animator.stop();
                 break;
             case KeyEvent.VK_LEFT:
-                animator.stop();
+                offsetProblem = -1;
+                break;
+            case KeyEvent.VK_RIGHT:
+                offsetProblem = 1;
+                break;
+            case KeyEvent.VK_UP:
+                offsetSolution = -1;
+                break;
+            case KeyEvent.VK_DOWN:
+                offsetSolution = 1;
                 break;
         }
     }
@@ -245,8 +227,92 @@ public class ApplicationState implements GLEventListener, KeyListener {
     public void keyReleased(KeyEvent e) {
 
     }
-    
-    private void changeProblem(int offset) {
+
+    private void changeProblem(GL4 gl4) {
+
+        shutdownSolution(gl4);
+
+        shutdownProblem(gl4);
+
+        int problemCount = problems.size();
+        int problemId = problems.indexOf(problem);
+        problemId = (problemId + problemCount + offsetProblem) % problemCount;
+
+        problem = problems.get(problemId);
+
+        initProblem(gl4);
+
+        solutions = factory.getSolutions(problem);
+
+        solution = solutions[problem.getSolutionId()];
+
+        initSolution(gl4);
+
+        offsetProblem = 0;
+
+        onProblemOrSolutionSet();
+    }
+
+    private void changeSolution(GL4 gl4) {
+
+        shutdownSolution(gl4);
+
+        int solutionCount = solutions.length;
+        if (solutionCount == 0) {
+            return;
+        }
+
+        int solutionId = problem.getSolutionId();
+        solutionId = (solutionId + solutionCount + offsetSolution) % solutionCount;
         
+        solution = solutions[solutionId];
+
+        initSolution(gl4);
+
+        offsetSolution = 0;
+
+        onProblemOrSolutionSet();
+    }
+
+    private void initSolution(GL4 gl4) {
+
+        System.out.print("Solution " + solution.getName() + " init... ");
+        System.out.println(solution.init(gl4) ? "Ok" : "Fail");
+
+        problem.setSolution(solution);
+    }
+
+    private void shutdownSolution(GL4 gl4) {
+
+        System.out.print("Solution " + solution.getName() + " shutdown... ");
+        System.out.println(solution.shutdown(gl4) ? "Ok" : "Fail");
+
+        problem.setSolution(null);
+    }
+
+    private void initProblem(GL4 gl4) {
+
+        System.out.print("Problem " + problem.getName() + " - init... ");
+        System.out.println(problem.init(gl4) ? "Ok" : "Fail");
+    }
+
+    private void shutdownProblem(GL4 gl4) {
+
+        System.out.print("Problem " + problem.getName() + " shutdown... ");
+        System.out.println(problem.shutdown(gl4) ? "Ok" : "Fail");
+    }
+
+    private void onProblemOrSolutionSet() {
+
+        System.gc();
+        
+        String newTitle = rootTitle + " - " + problem.getName();
+
+        if (solution != null) {
+            newTitle += " - " + solution.getName();
+        }
+        glWindow.setTitle(newTitle);
+
+        animator.resetFPSCounter();
     }
 }

@@ -26,7 +26,7 @@ public class ProblemFactory {
     private ArrayList<Problem> problems = new ArrayList<>();
     private HashMap<String, Solution[]> solutions = new HashMap<>();
 
-    public ProblemFactory(GL4 gl4, boolean skipInit) {
+    public ProblemFactory() {
 
         Problem newProbl;
 
@@ -35,36 +35,21 @@ public class ProblemFactory {
          */
         newProbl = new NullProblem();
 
-        if (skipInit || newProbl.init(gl4)) {
-            if (!skipInit) {
-                newProbl.shutdown(gl4);
-            }
-            problems.add(newProbl);
-            solutions.put(newProbl.getName(), new Solution[]{
-                new NullSolution()});
-        } else {
-            newProbl.shutdown(gl4);
-            System.err.println("Unable to create the Null Problem--exiting.");
-        }
+        problems.add(newProbl);
+        solutions.put(newProbl.getName(), new Solution[]{
+            new NullSolution()});
 
         /**
          * DynamicStreaming.
          */
         newProbl = new DynamicStreamingProblem();
 
-        if (skipInit || newProbl.init(gl4)) {
-            if (!skipInit) {
-                newProbl.shutdown(gl4);
-            }
-            problems.add(newProbl);
-            solutions.put(newProbl.getName(), new Solution[]{
-                new DynamicStreamingGLBufferSubData(),
-                new DynamicStreamingGLMapUnsynchronized(),
-                new DynamicStreamingGLMapPersistent()
-            });
-        } else {
-            newProbl.shutdown(gl4);
-        }
+        problems.add(newProbl);
+        solutions.put(newProbl.getName(), new Solution[]{
+            new DynamicStreamingGLBufferSubData(),
+            new DynamicStreamingGLMapUnsynchronized(),
+            new DynamicStreamingGLMapPersistent()
+        });
     }
 
     public ArrayList<Problem> getProblems() {
@@ -74,7 +59,7 @@ public class ProblemFactory {
     public Solution[] getSolutions(Problem problem) {
 
         assert (problem != null);
-        
+
         return solutions.get(problem.getName());
     }
 }

@@ -1,20 +1,24 @@
 // NOTE: Unlike every other set of Solutions, all of the StreamingVBs currently use this shader.
 // If you need to make modifications for a particular test, create a new shader. 
-#version 410
+#version 450
+
+// Output
+#define FRAG_COLOR  0
+
+precision highp float;
+precision highp int;
+layout(std140, column_major) uniform;
+layout(std430, column_major) buffer;
 
 // Uniforms / SSBO ----------------------------------------------------------------------------------------------------
-layout(std140) uniform CB0
-{
-    vec2 Viewport;
-};
 
 // Input --------------------------------------------------------------------------------------------------------------
-layout(location = 0) in vec2 In_v2Pos;
 
 // Output -------------------------------------------------------------------------------------------------------------
+layout(location = FRAG_COLOR) out vec4 outColor;
 
 // Functions ----------------------------------------------------------------------------------------------------------
 void main()
 {
-    gl_Position = vec4(In_v2Pos * Viewport + vec2(-1, 1), 0, 1);
+    outColor = vec4(1, 1, 1, 1);
 }

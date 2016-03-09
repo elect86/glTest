@@ -17,33 +17,14 @@ import com.jogamp.opengl.util.glsl.ShaderProgram;
  */
 public class GLUtilities {
 
-    private static final String SHADERS_ROOT = "src/shaders/";
+    private static final String SHADERS_ROOT = "src/glTest/shaders/";
 
-    public static int createProgram(GL4 gl4, String vsFilename, String fsFilename, String[] uniformNames,
-            int[] uniformLocations) {
-
-        assert (uniformNames != null);
-        assert (uniformLocations != null);
-
-        // Ensure that the sizes match, otherwise there is a parameter mismatch.
-        assert (uniformNames.length == uniformLocations.length);
-
-        int retProg = createProgram(gl4, vsFilename, fsFilename);
-
-        if (retProg != 0) {
-            for (int i = 0; i < uniformNames.length; i++) {
-                uniformLocations[i] = gl4.glGetUniformLocation(retProg, uniformNames[i]);
-            }
-        }
-        return retProg;
-    }
-
-    public static int createProgram(GL4 gl4, String vsFilename, String fsFilename) {
+    public static int createProgram(GL4 gl4, String shaderSrc) {
 
         ShaderCode vs = ShaderCode.create(gl4, GL_VERTEX_SHADER, 1, GLUtilities.class,
-                new String[]{SHADERS_ROOT + vsFilename}, true);
+                new String[]{SHADERS_ROOT + shaderSrc + ".vs"}, true);
         ShaderCode fs = ShaderCode.create(gl4, GL_FRAGMENT_SHADER, 1, GLUtilities.class,
-                new String[]{SHADERS_ROOT + fsFilename}, true);
+                new String[]{SHADERS_ROOT + shaderSrc + ".fs"}, true);
 
         ShaderProgram shaderProgram = new ShaderProgram();
         shaderProgram.add(vs);

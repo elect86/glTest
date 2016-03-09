@@ -13,6 +13,7 @@ import com.jogamp.opengl.GL4;
  */
 public class NullSolution extends Solution {
 
+    @Override
     public boolean init(GL4 gl4) {
         return true;
     }
@@ -21,7 +22,8 @@ public class NullSolution extends Solution {
     }
 
     @Override
-    public void shutdown(GL4 gl4) {
+    public boolean shutdown(GL4 gl4) {
+        return true;
     }
 
     @Override

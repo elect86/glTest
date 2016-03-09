@@ -6,6 +6,7 @@
 package glTest.solutions;
 
 import com.jogamp.opengl.GL4;
+import glTest.framework.ApplicationState;
 import glm.mat._4.Mat4;
 
 /**
@@ -15,10 +16,12 @@ import glm.mat._4.Mat4;
 public abstract class Solution {
 
     protected Mat4 proj;
-    protected int width;
-    protected int height;
+    protected int width = ApplicationState.RESOLUTION.x;
+    protected int height = ApplicationState.RESOLUTION.y;
     
-    public abstract void shutdown(GL4 gl4);
+    public abstract boolean init(GL4 gl4);
+    
+    public abstract boolean shutdown(GL4 gl4);
 
     // The name of this solution.
     public abstract String getName();

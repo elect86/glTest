@@ -39,31 +39,28 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
     private RingBuffer ringBuffer;
 
     @Override
-    public boolean init(GL4 gl4, int maxVertexCount) {
+    public boolean init(GL4 gl4) {
+
+        super.init(gl4);
 
         // Uniform Buffer
         gl4.glGenBuffers(1, uniformBuffer);
 
         // Program
-        String[] uniformNames = new String[]{"CB0"};
-        uniformLocation = new int[1];
-        program = GLUtilities.createProgram(gl4, "streaming_vb_gl_vs.glsl", "streaming_vb_gl_fs.glsl",
-                uniformNames, uniformLocation);
+        program = GLUtilities.createProgram(gl4, SHADER_SRC);
 
         if (program == 0) {
-            System.err.println("Unable to initialize solution " + getName()
-                    + ", shader compilation/linking failed.");
+            System.err.println("Unable to initialize solution " + getName() + ", shader compilation/linking failed.");
             return false;
         }
 
         // Dynamic vertex buffer
-        ringBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * maxVertexCount);
-//        particleBufferSize = GLApi.tripleBuffer * Vec2.SIZE * maxVertexCount;
-        particleBufferSize = ringBuffer.size;
+        ringBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
+        particleRingBuffer = ringBuffer.size;
 
         gl4.glGenBuffers(1, vertexBuffer);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glBufferData(GL_ARRAY_BUFFER, particleBufferSize, null, GL_DYNAMIC_DRAW);
+        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer, null, GL_DYNAMIC_DRAW);
 
         gl4.glGenVertexArrays(1, vao);
         gl4.glBindVertexArray(vao.get(0));
@@ -126,23 +123,25 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
                 gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
             }
         }
-        
+
         ringBuffer.lockAndUpdate(gl4);
 
-        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleBufferSize;
+//        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer;
     }
 
     @Override
-    public void shutdown(GL4 gl4) {
-    
+    public boolean shutdown(GL4 gl4) {
+
         gl4.glDisableVertexAttribArray(0);
         gl4.glDeleteVertexArrays(1, vao);
-        
+
         gl4.glDeleteBuffers(1, uniformBuffer);
         gl4.glDeleteProgram(program);
-        
+
         BufferUtils.destroyDirectBuffer(vao);
         BufferUtils.destroyDirectBuffer(uniformBuffer);
+
+        return true;
     }
 
     @Override

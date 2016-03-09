@@ -7,9 +7,13 @@ package glTest.solutions.dynamicStreaming;
 
 import static com.jogamp.opengl.GL2ES3.*;
 import com.jogamp.opengl.GL4;
+import com.jogamp.opengl.util.GLBuffers;
+import glTest.framework.ApplicationState;
 import glTest.framework.BufferUtils;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
+import glTest.framework.RingBuffer;
+import glTest.problems.DynamicStreamingProblem;
 import glm.vec._2.Vec2;
 import java.nio.ByteBuffer;
 import static glTest.problems.DynamicStreamingProblem.vertsPerParticle;
@@ -21,34 +25,38 @@ import glTest.solutions.DynamicStreamingSolution;
  */
 public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
+    private final int fpsUpdate = 3;
+    
     @Override
-    public boolean init(GL4 gl4, int maxVertexCount) {
+    public boolean init(GL4 gl4) {
 
+        super.init(gl4);
+        
         // Uniform Buffer
         gl4.glGenBuffers(1, uniformBuffer);
 
         // Program
-        String[] uniformNames = new String[]{"CB0"};
-        uniformLocation = new int[1];
-        program = GLUtilities.createProgram(gl4, "streaming_vb_gl_vs.glsl", "streaming_vb_gl_fs.glsl",
-                uniformNames, uniformLocation);
+        program = GLUtilities.createProgram(gl4, SHADER_SRC);
 
         if (program == 0) {
-            System.err.println("Unable to initialize solution " + getName()
-                    + ", shader compilation/linking failed.");
+            System.err.println("Unable to initialize solution " + getName() + ", shader compilation/linking failed.");
             return false;
         }
 
         // Dynamic vertex buffer
         startDestOffset = 0;
-        particleBufferSize = GLApi.tripleBuffer * Vec2.SIZE * maxVertexCount;
+        vertexCount = DynamicStreamingProblem.vertexCount;
+        particleRingBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
 
         gl4.glGenBuffers(1, vertexBuffer);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glBufferData(GL_ARRAY_BUFFER, particleBufferSize, null, GL_DYNAMIC_DRAW);
+        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.size, null, GL_DYNAMIC_DRAW);
 
         gl4.glGenVertexArrays(1, vao);
         gl4.glBindVertexArray(vao.get(0));
+
+        ApplicationState.animator.setUpdateFPSFrames(fpsUpdate, System.out);
+        ApplicationState.animator.resetFPSCounter();
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -65,12 +73,12 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer.get(0));
         gl4.glBufferData(GL_UNIFORM_BUFFER, constants.capacity(), constants, GL_DYNAMIC_DRAW);
-        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer.get(0));
+        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, Semantic.Uniform.CB0, uniformBuffer.get(0));
 
         // Input Layout
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glVertexAttribPointer(0, 2, GL_FLOAT, false, Vec2.SIZE, 0);
-        gl4.glEnableVertexAttribArray(0);
+        gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 2, GL_FLOAT, false, Vec2.SIZE, 0);
+        gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
 
         // Rasterizer State
         gl4.glDisable(GL_CULL_FACE);
@@ -86,14 +94,14 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         gl4.glDisable(GL_DEPTH_TEST);
         gl4.glDepthMask(false);
 
-        int particleCount = (vertices.capacity() / Vec2.SIZE) / vertsPerParticle;
+        int particleCount = vertexCount / vertsPerParticle;
         int particleSizeBytes = vertsPerParticle * Vec2.SIZE;
         int startIndex = startDestOffset / Vec2.SIZE;
 
         for (int i = 0; i < particleCount; ++i) {
 
             int vertexOffset = i * vertsPerParticle;
-            int srcOffset = vertexOffset;
+            int srcOffset = vertexOffset * Vec2.SIZE;
             int dstOffset = startDestOffset + (i * particleSizeBytes);
 
             vertices.position(srcOffset);
@@ -102,15 +110,15 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
             gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
         }
 
-        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleBufferSize;
+        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer.size;
 
         if (startDestOffset == 0) {
-            gl4.glBufferData(GL_ARRAY_BUFFER, particleBufferSize, null, GL_DYNAMIC_DRAW);
+            gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.size, null, GL_DYNAMIC_DRAW);
         }
     }
 
     @Override
-    public void shutdown(GL4 gl4) {
+    public boolean shutdown(GL4 gl4) {
 
         gl4.glDisableVertexAttribArray(0);
         gl4.glDeleteVertexArrays(1, vao);
@@ -119,11 +127,10 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
         gl4.glDeleteBuffers(1, uniformBuffer);
         gl4.glDeleteProgram(program);
+
+        super.shutdown(gl4);
         
-        BufferUtils.destroyDirectBuffer(vao);
-        BufferUtils.destroyDirectBuffer(vertexBuffer);
-        BufferUtils.destroyDirectBuffer(uniformBuffer);
-        BufferUtils.destroyDirectBuffer(constants);
+        return true;
     }
 
     @Override
@@ -134,11 +141,5 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
     @Override
     public boolean supportsApi(int glApi) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public class uniformLocations {
-
-        public int cb0;
-
     }
 }
