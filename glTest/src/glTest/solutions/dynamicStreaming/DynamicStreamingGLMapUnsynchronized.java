@@ -35,9 +35,6 @@ import glTest.solutions.DynamicStreamingSolution;
  */
 public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolution {
 
-//    private BufferLockManager bufferLockManager = new BufferLockManager();
-    private RingBuffer ringBuffer;
-
     @Override
     public boolean init(GL4 gl4) {
 
@@ -55,12 +52,11 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
         }
 
         // Dynamic vertex buffer
-        ringBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
-        particleRingBuffer = ringBuffer.size;
+        particleRingBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
 
         gl4.glGenBuffers(1, vertexBuffer);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer, null, GL_DYNAMIC_DRAW);
+        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.size, null, GL_DYNAMIC_DRAW);
 
         gl4.glGenVertexArrays(1, vao);
         gl4.glBindVertexArray(vao.get(0));
@@ -106,7 +102,7 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
         int startIndex = startDestOffset / Vec2.SIZE;
         int access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT;
 
-        ringBuffer.wait(gl4);
+        particleRingBuffer.wait(gl4);
 
         for (int i = 0; i < particleCount; ++i) {
 
@@ -124,7 +120,7 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
             }
         }
 
-        ringBuffer.lockAndUpdate(gl4);
+        particleRingBuffer.lockAndUpdate(gl4);
 
 //        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer;
     }

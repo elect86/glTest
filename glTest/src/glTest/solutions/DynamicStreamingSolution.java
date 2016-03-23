@@ -24,10 +24,10 @@ public abstract class DynamicStreamingSolution extends Solution {
     protected int program;
     protected IntBuffer vao;
     protected int startDestOffset;
-    protected RingBuffer particleRingBuffer;
     protected ByteBuffer constants;
     protected int vertexCount;
     protected final String SHADER_SRC = "streaming";
+    protected RingBuffer particleRingBuffer;
 
     @Override
     public boolean init(GL4 gl4) {

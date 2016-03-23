@@ -26,12 +26,12 @@ import glTest.solutions.DynamicStreamingSolution;
 public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
     private final int fpsUpdate = 3;
-    
+
     @Override
     public boolean init(GL4 gl4) {
 
         super.init(gl4);
-        
+
         // Uniform Buffer
         gl4.glGenBuffers(1, uniformBuffer);
 
@@ -50,7 +50,7 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
         gl4.glGenBuffers(1, vertexBuffer);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.size, null, GL_DYNAMIC_DRAW);
+        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.getSize(), null, GL_DYNAMIC_DRAW);
 
         gl4.glGenVertexArrays(1, vao);
         gl4.glBindVertexArray(vao.get(0));
@@ -97,7 +97,9 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         int particleCount = vertexCount / vertsPerParticle;
         int particleSizeBytes = vertsPerParticle * Vec2.SIZE;
         int startIndex = startDestOffset / Vec2.SIZE;
-
+//        System.out.println("startIndex: " + startIndex + ", " + particleRingBuffer.getWriteOffset());
+        System.out.println("startDestOffset: " + startDestOffset);
+        System.out.println("startIndex: " + startIndex);
         for (int i = 0; i < particleCount; ++i) {
 
             int vertexOffset = i * vertsPerParticle;
@@ -108,12 +110,13 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
             gl4.glBufferSubData(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes, vertices);
 
             gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
+//            gl4.glDrawArrays(GL_TRIANGLES, particleRingBuffer.getWriteOffset() + vertexOffset, vertsPerParticle);
         }
 
-        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer.size;
+        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer.getSize();
 
         if (startDestOffset == 0) {
-            gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.size, null, GL_DYNAMIC_DRAW);
+            gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.getSize(), null, GL_DYNAMIC_DRAW);
         }
     }
 
@@ -129,7 +132,7 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         gl4.glDeleteProgram(program);
 
         super.shutdown(gl4);
-        
+
         return true;
     }
 

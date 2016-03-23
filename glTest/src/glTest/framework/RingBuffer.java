@@ -18,14 +18,14 @@ import com.jogamp.opengl.GL4;
  */
 public class RingBuffer {
 
-    public int sectors;
-    public int size;
-    public int sectorSize;
-    public int bindId;
-    public int writeId;
-    public long[] fence;
-    public final long kOneSecondInNanoSeconds = 1_000_000_000;
-    public int stalls;
+    private int sectors;
+    private int size;
+    private int sectorSize;
+    private int readId;
+    private int writeId;
+    private long[] fence;
+    private final long oneSecondInNanoSeconds = 1_000_000_000;
+    private int stalls;
 
     public RingBuffer(int sectors, int sectorSize) {
         this(sectors, sectorSize, 0, 1);
@@ -35,7 +35,7 @@ public class RingBuffer {
         this.sectors = sectors;
         this.size = sectors * sectorSize;
         this.sectorSize = sectorSize;
-        this.bindId = sectors > 1 ? bindId : 0;
+        this.readId = sectors > 1 ? bindId : 0;
         this.writeId = sectors > 1 ? writeId : 0;
         fence = new long[sectors];
     }
@@ -60,7 +60,7 @@ public class RingBuffer {
                 stalls++;
                 System.out.println("new stall, total " + stalls);
                 waitFlags = GL_SYNC_FLUSH_COMMANDS_BIT;
-                waitDuration = kOneSecondInNanoSeconds;
+                waitDuration = oneSecondInNanoSeconds;
             }
         }
     }
@@ -75,14 +75,46 @@ public class RingBuffer {
          * glDeleteSync will silently ignore a sync value of zero, but there is
          * no need to query OpenGL if not needed.
          */
-        if (fence[bindId] > 0) {
-            gl4.glDeleteSync(fence[bindId]);
+        if (fence[readId] > 0) {
+            gl4.glDeleteSync(fence[readId]);
         }
-        fence[bindId] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        fence[readId] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 
     public void update() {
-        bindId = (bindId + 1) % sectors;
+        readId = (readId + 1) % sectors;
         writeId = (writeId + 1) % sectors;
+    }
+
+    public int getSectors() {
+        return sectors;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public int getSectorSize() {
+        return sectorSize;
+    }
+
+    public int getReadId() {
+        return readId;
+    }
+
+    public int getWriteId() {
+        return writeId;
+    }
+    
+    public int getReadOffset() {
+        return readId * sectorSize;
+    }
+
+    public int getWriteOffset() {
+        return writeId * sectorSize;
+    }
+
+    public int getStalls() {
+        return stalls;
     }
 }
