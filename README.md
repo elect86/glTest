@@ -1,3 +1,12 @@
+# glTest
+
+jogl port of the [apitest](https://github.com/nvMcJohn/apitest).
+
+## Changing Problems / Solutions
+
+The active problem is changed by pressing the left or right arrow keys.
+The active solution is changed by pressing the up or down arrow keys.
+
 # glCalls
 
 Micro benchmark in order to evaluate the *relative* weights between different GL state changes
