@@ -3,9 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package glTest.solutions;
+package glTest.solutions.null_;
 
 import com.jogamp.opengl.GL4;
+import glTest.solutions.Solution;
 
 /**
  *
@@ -35,10 +36,4 @@ public class NullSolution extends Solution {
     public String getProblemName() {
         return "NullProblem";
     }
-
-    @Override
-    public boolean supportsApi(int glApi) {
-        return true;
-    }
-
 }

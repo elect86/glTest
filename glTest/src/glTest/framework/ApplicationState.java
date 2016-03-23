@@ -154,7 +154,7 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         initProblem(gl4);
 
-        initSolution(gl4);
+        initSolution(gl4, 0);
 
         onProblemOrSolutionSet();
     }
@@ -246,7 +246,7 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         solution = solutions[problem.getSolutionId()];
 
-        initSolution(gl4);
+        initSolution(gl4, problem.getSolutionId());
 
         offsetProblem = 0;
 
@@ -267,19 +267,20 @@ public class ApplicationState implements GLEventListener, KeyListener {
         
         solution = solutions[solutionId];
 
-        initSolution(gl4);
+        initSolution(gl4, solutionId);
 
         offsetSolution = 0;
 
         onProblemOrSolutionSet();
     }
 
-    private void initSolution(GL4 gl4) {
+    private void initSolution(GL4 gl4, int solutionId) {
 
         System.out.print("Solution " + solution.getName() + " init... ");
         System.out.println(solution.init(gl4) ? "Ok" : "Fail");
 
-        problem.setSolution(solution);
+        problem.setSolution(gl4, solution);
+        problem.setSolutionId(solutionId);
     }
 
     private void shutdownSolution(GL4 gl4) {
@@ -287,7 +288,7 @@ public class ApplicationState implements GLEventListener, KeyListener {
         System.out.print("Solution " + solution.getName() + " shutdown... ");
         System.out.println(solution.shutdown(gl4) ? "Ok" : "Fail");
 
-        problem.setSolution(null);
+        problem.setSolution(gl4, null);
     }
 
     private void initProblem(GL4 gl4) {
@@ -312,6 +313,8 @@ public class ApplicationState implements GLEventListener, KeyListener {
             newTitle += " - " + solution.getName();
         }
         glWindow.setTitle(newTitle);
+        
+        System.gc();
 
         animator.resetFPSCounter();
     }

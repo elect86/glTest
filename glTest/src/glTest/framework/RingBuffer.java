@@ -21,31 +21,29 @@ public class RingBuffer {
     private int sectors;
     private int size;
     private int sectorSize;
-    private int readId;
-    private int writeId;
+    private int index;
     private long[] fence;
     private final long oneSecondInNanoSeconds = 1_000_000_000;
     private int stalls;
 
     public RingBuffer(int sectors, int sectorSize) {
-        this(sectors, sectorSize, 0, 1);
+        this(sectors, sectorSize, 0);
     }
 
-    public RingBuffer(int sectors, int sectorSize, int bindId, int writeId) {
+    public RingBuffer(int sectors, int sectorSize, int index) {
         this.sectors = sectors;
         this.size = sectors * sectorSize;
         this.sectorSize = sectorSize;
-        this.readId = sectors > 1 ? bindId : 0;
-        this.writeId = sectors > 1 ? writeId : 0;
+        this.index = index;
         fence = new long[sectors];
     }
 
     public void wait(GL4 gl4) {
-        if (fence[writeId] > 0) {
+        if (fence[index] > 0) {
             int waitFlags = 0;
             long waitDuration = 0;
             while (true) {
-                int waitRet = gl4.glClientWaitSync(fence[writeId], waitFlags, waitDuration);
+                int waitRet = gl4.glClientWaitSync(fence[index], waitFlags, waitDuration);
                 if (waitRet == GL_ALREADY_SIGNALED || waitRet == GL_CONDITION_SATISFIED) {
                     return;
                 }
@@ -75,15 +73,14 @@ public class RingBuffer {
          * glDeleteSync will silently ignore a sync value of zero, but there is
          * no need to query OpenGL if not needed.
          */
-        if (fence[readId] > 0) {
-            gl4.glDeleteSync(fence[readId]);
+        if (fence[index] > 0) {
+            gl4.glDeleteSync(fence[index]);
         }
-        fence[readId] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        fence[index] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 
     public void update() {
-        readId = (readId + 1) % sectors;
-        writeId = (writeId + 1) % sectors;
+        index = (index + 1) % sectors;
     }
 
     public int getSectors() {
@@ -98,23 +95,11 @@ public class RingBuffer {
         return sectorSize;
     }
 
-    public int getReadId() {
-        return readId;
-    }
-
-    public int getWriteId() {
-        return writeId;
-    }
-    
-    public int getReadOffset() {
-        return readId * sectorSize;
-    }
-
-    public int getWriteOffset() {
-        return writeId * sectorSize;
-    }
-
     public int getStalls() {
         return stalls;
+    }
+
+    public int getIndex() {
+        return index;
     }
 }

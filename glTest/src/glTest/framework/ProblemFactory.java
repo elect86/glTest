@@ -12,10 +12,12 @@ import com.jogamp.opengl.GL4;
 import java.util.ArrayList;
 import java.util.HashMap;
 import glTest.problems.DynamicStreamingProblem;
-import glTest.solutions.NullSolution;
+import glTest.problems.UntexturedObjectsProblem;
+import glTest.solutions.null_.NullSolution;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLBufferSubData;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapPersistent;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapUnsynchronized;
+import glTest.solutions.untexturedObjects.UntexturedObjectsGLUniform;
 
 /**
  *
@@ -36,8 +38,9 @@ public class ProblemFactory {
         newProbl = new NullProblem();
 
         problems.add(newProbl);
-        solutions.put(newProbl.getName(), new Solution[]{
-            new NullSolution()});
+        solutions.put(newProbl.getName(),
+                new Solution[]{
+                    new NullSolution()});
 
         /**
          * DynamicStreaming.
@@ -45,11 +48,21 @@ public class ProblemFactory {
         newProbl = new DynamicStreamingProblem();
 
         problems.add(newProbl);
-        solutions.put(newProbl.getName(), new Solution[]{
-            new DynamicStreamingGLBufferSubData(),
-            new DynamicStreamingGLMapUnsynchronized(),
-            new DynamicStreamingGLMapPersistent()
-        });
+        solutions.put(newProbl.getName(),
+                new Solution[]{
+                    new DynamicStreamingGLBufferSubData(),
+                    new DynamicStreamingGLMapUnsynchronized(),
+                    new DynamicStreamingGLMapPersistent()
+                });
+        /**
+         * UntexturedObjects.
+         */
+        newProbl = new UntexturedObjectsProblem();
+
+        problems.add(newProbl);
+        solutions.put(newProbl.getName(),
+                new Solution[]{
+                    new UntexturedObjectsGLUniform()});
     }
 
     public ArrayList<Problem> getProblems() {

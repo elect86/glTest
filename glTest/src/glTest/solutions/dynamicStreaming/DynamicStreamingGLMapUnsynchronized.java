@@ -20,6 +20,7 @@ import static com.jogamp.opengl.GL.GL_SCISSOR_TEST;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
 import com.jogamp.opengl.GL4;
+import glTest.framework.ApplicationState;
 import glTest.framework.BufferUtils;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
@@ -27,7 +28,6 @@ import glTest.framework.RingBuffer;
 import glm.vec._2.Vec2;
 import java.nio.ByteBuffer;
 import static glTest.problems.DynamicStreamingProblem.vertsPerParticle;
-import glTest.solutions.DynamicStreamingSolution;
 
 /**
  *
@@ -44,7 +44,7 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
         gl4.glGenBuffers(1, uniformBuffer);
 
         // Program
-        program = GLUtilities.createProgram(gl4, SHADER_SRC);
+        program = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
 
         if (program == 0) {
             System.err.println("Unable to initialize solution " + getName() + ", shader compilation/linking failed.");
@@ -56,10 +56,12 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
 
         gl4.glGenBuffers(1, vertexBuffer);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.size, null, GL_DYNAMIC_DRAW);
+        gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.getSize(), null, GL_DYNAMIC_DRAW);
 
         gl4.glGenVertexArrays(1, vao);
         gl4.glBindVertexArray(vao.get(0));
+
+        ApplicationState.animator.setUpdateFPSFrames(5, System.out);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -80,7 +82,7 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
 
         // Input Layout
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glVertexAttribPointer(0, 2, GL_FLOAT, false, Vec2.SIZE, 0);
+        gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 2, GL_FLOAT, false, Vec2.SIZE, 0);
         gl4.glEnableVertexAttribArray(0);
 
         // Rasterizer State
@@ -111,9 +113,15 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
 
             ByteBuffer dst = gl4.glMapBufferRange(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes, access);
             if (dst != null) {
-                for (int j = 0; j < particleSizeBytes; j++) {
-                    dst.put(j, vertices.get(vertexOffset + j));
-                }
+                /**
+                 * Equivalent.
+                 */
+//                for (int j = 0; j < particleSizeBytes; j++) {
+//                    dst.put(j, vertices.get(vertexOffset * Vec2.SIZE + j));
+//                }
+                vertices.position(vertexOffset * Vec2.SIZE);
+                vertices.limit(vertices.position() + particleSizeBytes);
+                dst.put(vertices);
                 gl4.glUnmapBuffer(GL_ARRAY_BUFFER);
 
                 gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
@@ -122,20 +130,21 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
 
         particleRingBuffer.lockAndUpdate(gl4);
 
-//        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer;
+        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer.getSize();
     }
 
     @Override
     public boolean shutdown(GL4 gl4) {
 
-        gl4.glDisableVertexAttribArray(0);
+        gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDeleteVertexArrays(1, vao);
+
+        gl4.glDeleteBuffers(1, vertexBuffer);
 
         gl4.glDeleteBuffers(1, uniformBuffer);
         gl4.glDeleteProgram(program);
 
-        BufferUtils.destroyDirectBuffer(vao);
-        BufferUtils.destroyDirectBuffer(uniformBuffer);
+        super.shutdown(gl4);
 
         return true;
     }
@@ -144,10 +153,4 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
     public String getName() {
         return "GLMapUnsynchronized";
     }
-
-    @Override
-    public boolean supportsApi(int glApi) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }

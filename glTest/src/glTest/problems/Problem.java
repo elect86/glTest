@@ -18,7 +18,7 @@ import java.nio.FloatBuffer;
 public abstract class Problem {
 
     protected Solution solution;
-    protected int solutionId = 0;
+    private int solutionId = 0;
     protected FloatBuffer clearColor, clearDepth;
 
     public boolean init(GL4 gl4) {
@@ -49,7 +49,7 @@ public abstract class Problem {
         return "";
     }
 
-    public void setSolution(Solution solution) {
+    public void setSolution(GL4 gl4, Solution solution) {
         this.solution = solution;
     }
 
@@ -59,5 +59,9 @@ public abstract class Problem {
 
     public int getSolutionId() {
         return solutionId;
+    }
+
+    public void setSolutionId(int solutionId) {
+        this.solutionId = solutionId;
     }
 }

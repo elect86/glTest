@@ -17,14 +17,12 @@ import com.jogamp.opengl.util.glsl.ShaderProgram;
  */
 public class GLUtilities {
 
-    private static final String SHADERS_ROOT = "src/glTest/shaders/";
-
-    public static int createProgram(GL4 gl4, String shaderSrc) {
+    public static int createProgram(GL4 gl4, String shaderRoot, String shaderSrc) {
 
         ShaderCode vs = ShaderCode.create(gl4, GL_VERTEX_SHADER, 1, GLUtilities.class,
-                new String[]{SHADERS_ROOT + shaderSrc + ".vs"}, true);
+                new String[]{shaderRoot + shaderSrc + ".vert"}, true);
         ShaderCode fs = ShaderCode.create(gl4, GL_FRAGMENT_SHADER, 1, GLUtilities.class,
-                new String[]{SHADERS_ROOT + shaderSrc + ".fs"}, true);
+                new String[]{shaderRoot + shaderSrc + ".frag"}, true);
 
         ShaderProgram shaderProgram = new ShaderProgram();
         shaderProgram.add(vs);

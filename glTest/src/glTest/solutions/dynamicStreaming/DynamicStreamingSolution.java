@@ -3,12 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package glTest.solutions;
+package glTest.solutions.dynamicStreaming;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.BufferUtils;
 import glTest.framework.RingBuffer;
+import glTest.problems.DynamicStreamingProblem;
+import glTest.solutions.Solution;
 import glm.vec._4.Vec4;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -19,13 +21,15 @@ import java.nio.IntBuffer;
  */
 public abstract class DynamicStreamingSolution extends Solution {
 
+    protected static final String SHADERS_ROOT = "src/glTest/solutions/dynamicStreaming/shaders/";
+    
     protected IntBuffer uniformBuffer;
     protected IntBuffer vertexBuffer;
     protected int program;
     protected IntBuffer vao;
     protected int startDestOffset;
     protected ByteBuffer constants;
-    protected int vertexCount;
+    protected int vertexCount = DynamicStreamingProblem.vertexCount;
     protected final String SHADER_SRC = "streaming";
     protected RingBuffer particleRingBuffer;
 
@@ -49,7 +53,7 @@ public abstract class DynamicStreamingSolution extends Solution {
         BufferUtils.destroyDirectBuffer(vertexBuffer);
         BufferUtils.destroyDirectBuffer(uniformBuffer);
         BufferUtils.destroyDirectBuffer(constants);
-        
+
         return true;
     }
 
@@ -60,5 +64,4 @@ public abstract class DynamicStreamingSolution extends Solution {
     public String getProblemName() {
         return "DynamicStreaming";
     }
-
 }

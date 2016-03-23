@@ -12,19 +12,21 @@ import static com.jogamp.opengl.GL.GL_DEPTH_TEST;
 import static com.jogamp.opengl.GL.GL_DYNAMIC_DRAW;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 import static com.jogamp.opengl.GL.GL_FRONT;
+import static com.jogamp.opengl.GL.GL_MAP_WRITE_BIT;
 import static com.jogamp.opengl.GL.GL_NO_ERROR;
 import static com.jogamp.opengl.GL.GL_SCISSOR_TEST;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
 import com.jogamp.opengl.GL4;
-import glTest.framework.BufferUtils;
+import static com.jogamp.opengl.GL4.GL_MAP_COHERENT_BIT;
+import static com.jogamp.opengl.GL4.GL_MAP_PERSISTENT_BIT;
+import glTest.framework.ApplicationState;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
 import glTest.framework.RingBuffer;
 import glm.vec._2.Vec2;
 import java.nio.ByteBuffer;
 import static glTest.problems.DynamicStreamingProblem.vertsPerParticle;
-import glTest.solutions.DynamicStreamingSolution;
 
 /**
  *
@@ -32,22 +34,23 @@ import glTest.solutions.DynamicStreamingSolution;
  */
 public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
 
-    private RingBuffer ringBuffer;
-    private ByteBuffer vertexDataPointer;
+    private RingBuffer particleRingBuffer;
+    private ByteBuffer vertexDataPtr;
 
     @Override
     public boolean init(GL4 gl4) {
 
+        super.init(gl4);
+        
         if (!gl4.isExtensionAvailable("GL_ARB_buffer_storage")) {
-            System.err.println("Unable to initialize solution '" + getName()
-                    + "', glBufferStorage(), i.e. v, unavailable");
+            System.err.println("Unable to initialize solution '" + getName() + "', glBufferStorage() unavailable");
         }
 
         // Uniform Buffer
         gl4.glGenBuffers(1, uniformBuffer);
 
         // Program
-        program = GLUtilities.createProgram(gl4, SHADER_SRC);
+        program = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
 
         if (program == 0) {
             System.err.println("Unable to initialize solution " + getName()
@@ -59,16 +62,16 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         gl4.glGenBuffers(1, vertexBuffer);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
 
-        ringBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
-//        particleBufferSize = GLApi.tripleBuffer * Vec2.SIZE * maxVertexCount;
-//        particleRingBuffer = ringBuffer.size;
-//
-//        int flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-//        gl4.glBufferStorage(GL_ARRAY_BUFFER, particleRingBuffer, null, flags);
-//        vertexDataPointer = gl4.glMapBufferRange(GL_ARRAY_BUFFER, 0, particleRingBuffer, flags);
+        particleRingBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
+
+        int flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+        gl4.glBufferStorage(GL_ARRAY_BUFFER, particleRingBuffer.getSize(), null, flags);
+        vertexDataPtr = gl4.glMapBufferRange(GL_ARRAY_BUFFER, 0, particleRingBuffer.getSize(), flags);
 
         gl4.glGenVertexArrays(1, vao);
         gl4.glBindVertexArray(vao.get(0));
+        
+        ApplicationState.animator.setUpdateFPSFrames(58, System.out);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -89,7 +92,7 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
 
         // Input Layout
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
-        gl4.glVertexAttribPointer(0, 2, GL_FLOAT, false, Vec2.SIZE, 0);
+        gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 2, GL_FLOAT, false, Vec2.SIZE, 0);
         gl4.glEnableVertexAttribArray(0);
 
         // Rasterizer State
@@ -106,57 +109,60 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         gl4.glDisable(GL_DEPTH_TEST);
         gl4.glDepthMask(false);
 
-        int particleCount = (vertices.capacity() / Vec2.SIZE) / vertsPerParticle;
+        int particleCount = vertexCount / vertsPerParticle;
         int particleSizeBytes = vertsPerParticle * Vec2.SIZE;
         int startIndex = startDestOffset / Vec2.SIZE;
 
-        ringBuffer.wait(gl4);
+        /**
+         * Need to wait for this area to become available. If we've sized things properly,
+         * it will always be available right away.
+         */
+        particleRingBuffer.wait(gl4);
 
         for (int i = 0; i < particleCount; ++i) {
 
             int vertexOffset = i * vertsPerParticle;
-            int dstOffset = startDestOffset + (i * particleSizeBytes);
-
+            int dstOffset = startDestOffset + (i * particleSizeBytes);     
+            /**
+             * 20% faster.
+             */
             for (int j = 0; j < particleSizeBytes; j++) {
-                vertexDataPointer.put(dstOffset+ j, vertices.get(vertexOffset + j));
+                vertexDataPtr.put(dstOffset + j, vertices.get(vertexOffset * Vec2.SIZE + j));
             }
+//            vertices.position(vertexOffset * Vec2.SIZE);
+//            vertices.limit(vertices.position() + particleSizeBytes);
+//            vertexDataPtr.position(dstOffset);
+//            vertexDataPtr.put(vertices);
 
             gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
         }
 
-        ringBuffer.lockAndUpdate(gl4);
+        // Lock this area for the future.
+        particleRingBuffer.lockAndUpdate(gl4);
 
-//        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer;
+        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer.getSize();
     }
 
     @Override
     public boolean shutdown(GL4 gl4) {
-    
-        gl4.glDisableVertexAttribArray(0);
+
+        gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDeleteVertexArrays(1, vao);
-        
+
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
         gl4.glUnmapBuffer(GL_ARRAY_BUFFER);
         gl4.glDeleteBuffers(1, vertexBuffer);
-        
+
         gl4.glDeleteBuffers(1, uniformBuffer);
         gl4.glDeleteProgram(program);
-        
-        BufferUtils.destroyDirectBuffer(vao);
-        BufferUtils.destroyDirectBuffer(vertexBuffer);
-        BufferUtils.destroyDirectBuffer(uniformBuffer);
+
+        super.shutdown(gl4);
         
         return true;
     }
 
     @Override
     public String getName() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return "GLMapPersistent";
     }
-
-    @Override
-    public boolean supportsApi(int glApi) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }

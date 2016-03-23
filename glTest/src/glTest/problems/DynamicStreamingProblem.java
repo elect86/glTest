@@ -9,9 +9,10 @@ import static com.jogamp.opengl.GL2ES3.GL_COLOR;
 import static com.jogamp.opengl.GL2ES3.GL_DEPTH;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import glTest.solutions.DynamicStreamingSolution;
+import glTest.solutions.dynamicStreaming.DynamicStreamingSolution;
 import glm.vec._2.Vec2;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  *
@@ -34,6 +35,7 @@ public class DynamicStreamingProblem extends Problem {
         super.init(gl4);
 
         vertexData = GLBuffers.newDirectByteBuffer(vertexCount * Vec2.SIZE);
+//        vertexData = ByteBuffer.allocate(vertexCount * Vec2.SIZE).order(ByteOrder.nativeOrder());
 
         clearColor.put(new float[]{0.3f, 0.0f, 0.3f, 1.0f}).rewind();
         clearDepth.put(new float[]{1.0f}).rewind();

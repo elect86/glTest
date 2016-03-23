@@ -7,25 +7,19 @@ package glTest.solutions.dynamicStreaming;
 
 import static com.jogamp.opengl.GL2ES3.*;
 import com.jogamp.opengl.GL4;
-import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
-import glTest.framework.BufferUtils;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
 import glTest.framework.RingBuffer;
-import glTest.problems.DynamicStreamingProblem;
 import glm.vec._2.Vec2;
 import java.nio.ByteBuffer;
 import static glTest.problems.DynamicStreamingProblem.vertsPerParticle;
-import glTest.solutions.DynamicStreamingSolution;
 
 /**
  *
  * @author elect
  */
 public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
-
-    private final int fpsUpdate = 3;
 
     @Override
     public boolean init(GL4 gl4) {
@@ -36,7 +30,7 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         gl4.glGenBuffers(1, uniformBuffer);
 
         // Program
-        program = GLUtilities.createProgram(gl4, SHADER_SRC);
+        program = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
 
         if (program == 0) {
             System.err.println("Unable to initialize solution " + getName() + ", shader compilation/linking failed.");
@@ -45,7 +39,6 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
         // Dynamic vertex buffer
         startDestOffset = 0;
-        vertexCount = DynamicStreamingProblem.vertexCount;
         particleRingBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
 
         gl4.glGenBuffers(1, vertexBuffer);
@@ -55,8 +48,7 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         gl4.glGenVertexArrays(1, vao);
         gl4.glBindVertexArray(vao.get(0));
 
-        ApplicationState.animator.setUpdateFPSFrames(fpsUpdate, System.out);
-        ApplicationState.animator.resetFPSCounter();
+        ApplicationState.animator.setUpdateFPSFrames(2, System.out);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -97,20 +89,16 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         int particleCount = vertexCount / vertsPerParticle;
         int particleSizeBytes = vertsPerParticle * Vec2.SIZE;
         int startIndex = startDestOffset / Vec2.SIZE;
-//        System.out.println("startIndex: " + startIndex + ", " + particleRingBuffer.getWriteOffset());
-        System.out.println("startDestOffset: " + startDestOffset);
-        System.out.println("startIndex: " + startIndex);
+
         for (int i = 0; i < particleCount; ++i) {
 
             int vertexOffset = i * vertsPerParticle;
             int srcOffset = vertexOffset * Vec2.SIZE;
             int dstOffset = startDestOffset + (i * particleSizeBytes);
 
-            vertices.position(srcOffset);
-            gl4.glBufferSubData(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes, vertices);
+            gl4.glBufferSubData(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes, vertices.position(srcOffset));
 
             gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
-//            gl4.glDrawArrays(GL_TRIANGLES, particleRingBuffer.getWriteOffset() + vertexOffset, vertsPerParticle);
         }
 
         startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer.getSize();
@@ -123,7 +111,7 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
     @Override
     public boolean shutdown(GL4 gl4) {
 
-        gl4.glDisableVertexAttribArray(0);
+        gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDeleteVertexArrays(1, vao);
 
         gl4.glDeleteBuffers(1, vertexBuffer);
@@ -139,10 +127,5 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
     @Override
     public String getName() {
         return "GLBufferSubData";
-    }
-
-    @Override
-    public boolean supportsApi(int glApi) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

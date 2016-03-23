@@ -7,6 +7,7 @@ package glTest.solutions;
 
 import com.jogamp.opengl.GL4;
 import glTest.framework.ApplicationState;
+import glm.glm;
 import glm.mat._4.Mat4;
 
 /**
@@ -15,12 +16,14 @@ import glm.mat._4.Mat4;
  */
 public abstract class Solution {
 
-    protected Mat4 proj;
     protected int width = ApplicationState.RESOLUTION.x;
     protected int height = ApplicationState.RESOLUTION.y;
-    
-    public abstract boolean init(GL4 gl4);
-    
+    protected Mat4 proj = glm.perspective_((float) Math.PI * 0.25f, (float) width / height, 0.1f, 10_000f);
+
+    public boolean init(GL4 gl4) {
+        return true;
+    }
+
     public abstract boolean shutdown(GL4 gl4);
 
     // The name of this solution.
@@ -28,9 +31,4 @@ public abstract class Solution {
 
     // The name of the problem this solution addresses.
     public abstract String getProblemName();
-
-    // Whether this solution could conceivably run on this Graphics API. 
-    // If the support is conditional on an extension, the function should return
-    // true and then test for specific support in the Init function (returning false if unsupported).
-    public abstract boolean supportsApi(int glApi);
 }
