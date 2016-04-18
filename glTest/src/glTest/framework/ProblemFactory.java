@@ -17,7 +17,7 @@ import glTest.solutions.null_.NullSolution;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLBufferSubData;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapPersistent;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapUnsynchronized;
-import glTest.solutions.untexturedObjects.UntexturedObjectsGLUniform;
+import glTest.solutions.untexturedObjects.uniforms.UntexturedObjectsGLUniform;
 
 /**
  *

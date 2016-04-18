@@ -7,11 +7,11 @@ package glTest.solutions.untexturedObjects;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import glTest.framework.BufferUtils;
 import glTest.solutions.Solution;
 import glm.mat._4.Mat4;
-import glm.vec._4.Vec4;
+import glm.vec._3.Vec3;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 
 /**
  *
@@ -19,9 +19,10 @@ import java.nio.ByteBuffer;
  */
 public abstract class UntexturedObjectsSolution extends Solution {
 
-    protected int objectCount;
-    protected int indexCount;
-    protected int program;
+    protected int objectCount, indexCount, program;
+    protected Vec3 dir = new Vec3(), at = new Vec3(), up = new Vec3(), eye = new Vec3();
+    protected Mat4 view = new Mat4(), viewProj = new Mat4();
+    protected FloatBuffer matBuffer = GLBuffers.newDirectFloatBuffer(16);
 
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 

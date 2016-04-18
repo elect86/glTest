@@ -40,8 +40,8 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
 
         super.init(gl4);
 
-        // Uniform Buffer
-        gl4.glGenBuffers(1, uniformBuffer);
+        // Gen Buffers
+        gl4.glGenBuffers(Buffer.MAX, bufferName);
 
         // Program
         program = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
@@ -54,12 +54,11 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
         // Dynamic vertex buffer
         particleRingBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
 
-        gl4.glGenBuffers(1, vertexBuffer);
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.getSize(), null, GL_DYNAMIC_DRAW);
 
-        gl4.glGenVertexArrays(1, vao);
-        gl4.glBindVertexArray(vao.get(0));
+        gl4.glGenVertexArrays(1, vertexArrayName);
+        gl4.glBindVertexArray(vertexArrayName.get(0));
 
         ApplicationState.animator.setUpdateFPSFrames(5, System.out);
 
@@ -76,12 +75,12 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
         constants.putFloat(Float.BYTES * 0, +2.0f / width);
         constants.putFloat(Float.BYTES * 1, -2.0f / height);
 
-        gl4.glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer.get(0));
+        gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.UNIFORM));
         gl4.glBufferData(GL_UNIFORM_BUFFER, constants.capacity(), constants, GL_DYNAMIC_DRAW);
-        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer.get(0));
+        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 0, bufferName.get(Buffer.UNIFORM));
 
         // Input Layout
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.get(0));
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 2, GL_FLOAT, false, Vec2.SIZE, 0);
         gl4.glEnableVertexAttribArray(0);
 
@@ -137,11 +136,10 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
     public boolean shutdown(GL4 gl4) {
 
         gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
-        gl4.glDeleteVertexArrays(1, vao);
+        gl4.glDeleteVertexArrays(1, vertexArrayName);
 
-        gl4.glDeleteBuffers(1, vertexBuffer);
+        gl4.glDeleteBuffers(Buffer.MAX, bufferName);
 
-        gl4.glDeleteBuffers(1, uniformBuffer);
         gl4.glDeleteProgram(program);
 
         super.shutdown(gl4);

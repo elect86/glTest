@@ -22,23 +22,25 @@ import java.nio.IntBuffer;
 public abstract class DynamicStreamingSolution extends Solution {
 
     protected static final String SHADERS_ROOT = "src/glTest/solutions/dynamicStreaming/shaders/";
-    
-    protected IntBuffer uniformBuffer;
-    protected IntBuffer vertexBuffer;
-    protected int program;
-    protected IntBuffer vao;
-    protected int startDestOffset;
+
+    protected class Buffer {
+
+        public static final int UNIFORM = 0;
+        public static final int VERTEX = 1;
+        public static final int MAX = 2;
+    }
+
+    protected IntBuffer bufferName, vertexArrayName;
+    protected int program, startDestOffset, vertexCount = DynamicStreamingProblem.vertexCount;
     protected ByteBuffer constants;
-    protected int vertexCount = DynamicStreamingProblem.vertexCount;
     protected final String SHADER_SRC = "streaming";
     protected RingBuffer particleRingBuffer;
 
     @Override
     public boolean init(GL4 gl4) {
 
-        uniformBuffer = GLBuffers.newDirectIntBuffer(1);
-        vertexBuffer = GLBuffers.newDirectIntBuffer(1);
-        vao = GLBuffers.newDirectIntBuffer(1);
+        bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
+        vertexArrayName = GLBuffers.newDirectIntBuffer(1);
         constants = GLBuffers.newDirectByteBuffer(Vec4.SIZE);
 
         return true;
@@ -49,9 +51,8 @@ public abstract class DynamicStreamingSolution extends Solution {
     @Override
     public boolean shutdown(GL4 gl4) {
 
-        BufferUtils.destroyDirectBuffer(vao);
-        BufferUtils.destroyDirectBuffer(vertexBuffer);
-        BufferUtils.destroyDirectBuffer(uniformBuffer);
+        BufferUtils.destroyDirectBuffer(vertexArrayName);
+        BufferUtils.destroyDirectBuffer(bufferName);
         BufferUtils.destroyDirectBuffer(constants);
 
         return true;
