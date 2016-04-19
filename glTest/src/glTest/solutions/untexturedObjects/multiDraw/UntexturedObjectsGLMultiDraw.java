@@ -159,6 +159,26 @@ public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
         
         gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, null, count, 0);
     }
+    
+    @Override
+    public boolean shutdown(GL4 gl4) {
+
+        if(useShaderDrawParameters) {
+            gl4.glDisableVertexAttribArray(Semantic.Attr.DRAW_ID);
+        }
+        
+        gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
+        gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
+        
+
+        gl4.glDeleteBuffers(Buffer.MAX, bufferName);
+        gl4.glDeleteVertexArrays(1, vertexArrayName);
+        gl4.glDeleteProgram(programName);
+
+        super.shutdown(gl4);
+
+        return true;
+    }
 
     @Override
     public String getName() {
