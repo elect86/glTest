@@ -11,6 +11,7 @@ precision highp int;
 layout(std140, column_major) uniform;
 layout(std430, column_major) buffer;
 
+
 // Uniforms / SSBO ----------------------------------------------------------------------------------------------------
 
 // Input --------------------------------------------------------------------------------------------------------------
@@ -20,7 +21,7 @@ layout (location = BLOCK) in Block
 } inBlock;
 
 //  Output ------------------------------------------------------------------------------------------------------------
-layout(location = FRAG_COLOR) out vec4 outColor;
+layout (location = FRAG_COLOR) out vec4 outColor;
 
 // Functions ----------------------------------------------------------------------------------------------------------
 void main()

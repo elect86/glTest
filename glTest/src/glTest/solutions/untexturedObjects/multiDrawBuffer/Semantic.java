@@ -3,7 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package glTest.solutions.untexturedObjects.drawLoop;
+package glTest.solutions.untexturedObjects.multiDrawBuffer;
+
+import glTest.solutions.untexturedObjects.multiDraw.*;
 
 /**
  *
@@ -15,7 +17,7 @@ public class Semantic {
 
         public static final int POSITION = 0;
         public static final int COLOR = 1;
-        public static final int WORLD_ID = 2;
+        public static final int DRAW_ID = 2;
     }
 
     public class Frag {

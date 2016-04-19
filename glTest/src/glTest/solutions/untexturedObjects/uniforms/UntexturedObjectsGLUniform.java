@@ -16,7 +16,6 @@ import glm.glm;
 import glm.mat._4.Mat4;
 import glm.vec._3.Vec3;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 /**
@@ -25,11 +24,18 @@ import java.nio.IntBuffer;
  */
 public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
 
-    private static final String SHADER_SRC = "cubes-gl-uniform";
+    private static final String SHADER_SRC = "uniform";
     protected static final String SHADERS_ROOT = "src/glTest/solutions/untexturedObjects/uniforms/shaders/";
 
-    private IntBuffer vbo = GLBuffers.newDirectIntBuffer(1), ibo = GLBuffers.newDirectIntBuffer(1),
-            vao = GLBuffers.newDirectIntBuffer(1);
+    private class Buffer {
+
+        public static final int VERTEX = 0;
+        public static final int ELEMENT = 1;
+        public static final int MAX = 2;
+    }
+
+    private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX),
+            vertexArrayName = GLBuffers.newDirectIntBuffer(1);
 
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
@@ -39,23 +45,23 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
         }
 
         // Program
-        program = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
+        programName = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
 
-        if (program == 0) {
+        if (programName == 0) {
             System.err.println("Unable to initialize solution " + getName() + ", shader compilation/linking failed.");
             return false;
         }
 
-        gl4.glGenBuffers(1, vbo);
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, vbo.get(0));
+        gl4.glGenBuffers(Buffer.MAX, bufferName);
+
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl4.glBufferData(GL_ARRAY_BUFFER, vertices.capacity(), vertices, GL_STATIC_DRAW);
 
-        gl4.glGenBuffers(1, ibo);
-        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo.get(0));
+        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
         gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.capacity(), indices, GL_STATIC_DRAW);
 
-        gl4.glGenVertexArrays(1, vao);
-        gl4.glBindVertexArray(vao.get(0));
+        gl4.glGenVertexArrays(1, vertexArrayName);
+        gl4.glBindVertexArray(vertexArrayName.get(0));
 
         ApplicationState.animator.setUpdateFPSFrames(15, System.out);
 
@@ -63,7 +69,7 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
     }
 
     @Override
-    public void render(GL4 gl4, Mat4[] transforms) {
+    public void render(GL4 gl4, ByteBuffer transforms) {
 
         // Program
         {
@@ -75,14 +81,13 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
             glm.lookAt(eye, at, up, view);
 
             proj.mul(view, viewProj);
-
-            gl4.glUseProgram(program);
-            gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM0, 1, false, viewProj.toDfb(matBuffer));
         }
+        gl4.glUseProgram(programName);
+        gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM0, 1, false, viewProj.toDfb(matBuffer));
 
         // Input Layout
-        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo.get(0));
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, vbo.get(0));
+        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex_v3fn3f.SIZE, 0);
         gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 3, GL_FLOAT, false, Vertex_v3fn3f.SIZE, Vec3.SIZE);
 
@@ -102,11 +107,16 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
         gl4.glEnable(GL_DEPTH_TEST);
         gl4.glDepthMask(true);
 
-        for (Mat4 mat : transforms) {
+        for (int i = 0; i < objectCount; i++) {
 
-            gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM1, 1, false, mat.toDfb(matBuffer));
+            for (int j = 0; j < Mat4.SIZE; j++) {
+                
+            }
+            transforms.position(i * Mat4.SIZE);
+            gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM1, 1, false, transforms.asFloatBuffer());
             gl4.glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0);
         }
+        transforms.rewind();
     }
 
     @Override
@@ -115,11 +125,10 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
         gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
 
-        gl4.glDeleteVertexArrays(1, vao);
+        gl4.glDeleteVertexArrays(1, vertexArrayName);
 
-        gl4.glDeleteBuffers(1, vbo);
-        gl4.glDeleteBuffers(1, ibo);
-        gl4.glDeleteProgram(program);
+        gl4.glDeleteBuffers(Buffer.MAX, bufferName);
+        gl4.glDeleteProgram(programName);
 
         super.shutdown(gl4);
 

@@ -115,12 +115,12 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
                 /**
                  * Equivalent.
                  */
-//                for (int j = 0; j < particleSizeBytes; j++) {
-//                    dst.put(j, vertices.get(vertexOffset * Vec2.SIZE + j));
-//                }
-                vertices.position(vertexOffset * Vec2.SIZE);
-                vertices.limit(vertices.position() + particleSizeBytes);
-                dst.put(vertices);
+                for (int j = 0; j < particleSizeBytes; j++) {
+                    dst.put(j, vertices.get(vertexOffset * Vec2.SIZE + j));
+                }
+//                vertices.position(vertexOffset * Vec2.SIZE);
+//                vertices.limit(vertices.position() + particleSizeBytes);
+//                dst.put(vertices);
                 gl4.glUnmapBuffer(GL_ARRAY_BUFFER);
 
                 gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);

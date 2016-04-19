@@ -19,7 +19,7 @@ import java.nio.FloatBuffer;
  */
 public abstract class UntexturedObjectsSolution extends Solution {
 
-    protected int objectCount, indexCount, program;
+    protected int objectCount, indexCount, programName;
     protected Vec3 dir = new Vec3(), at = new Vec3(), up = new Vec3(), eye = new Vec3();
     protected Mat4 view = new Mat4(), viewProj = new Mat4();
     protected FloatBuffer matBuffer = GLBuffers.newDirectFloatBuffer(16);
@@ -32,7 +32,7 @@ public abstract class UntexturedObjectsSolution extends Solution {
         return true;
     }
 
-    public abstract void render(GL4 gl4, Mat4[] transforms);
+    public abstract void render(GL4 gl4, ByteBuffer transforms);
 
     @Override
     public boolean shutdown(GL4 gl4) {

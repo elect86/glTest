@@ -29,13 +29,13 @@ public class UntexturedObjectsProblem extends Problem {
     private int objectsZ = 64;
     private int objectCount = objectsX * objectsY * objectsZ;
 
-    private int transformCount = objectCount;
+    private int transformsCount = objectCount;
     private int vertexCount = DRAW_SINGLE_TRIANGLE ? 3 : 8;
     private int indexCount = DRAW_SINGLE_TRIANGLE ? 3 : 36;
 
     private ByteBuffer vertices;
     private ByteBuffer indices;
-    private Mat4[] transforms;
+    private ByteBuffer transforms;
 
     private int iteration = 0;
 
@@ -46,16 +46,14 @@ public class UntexturedObjectsProblem extends Problem {
 
         genUnitCube();
 
-        transforms = new Mat4[transformCount];
-        
-        for (int i = 0; i < transforms.length; i++) {
-            transforms[i] = new Mat4();
+        transforms = GLBuffers.newDirectByteBuffer(Mat4.SIZE * transformsCount);
+
+        for (int i = 0; i < transformsCount; i++) {
+            new Mat4().toDbb(transforms, i * Mat4.SIZE);
         }
 
-//        vertexData = GLBuffers.newDirectByteBuffer(vertexCount * Vec2.SIZE);
-//        vertexData = ByteBuffer.allocate(vertexCount * Vec2.SIZE).order(ByteOrder.nativeOrder());
-        clearColor.put(new float[]{0.0f, 0.1f, 0.0f, 1.0f}).rewind();
-        clearDepth.put(new float[]{1.0f}).rewind();
+        clearColor.put(0, 0).put(1, 0.1f).put(2, 0).put(3, 1);
+        clearDepth.put(0, 1);
 
         return true;
     }
@@ -103,10 +101,10 @@ public class UntexturedObjectsProblem extends Problem {
 
         gl4.glClearBufferfv(GL_COLOR, 0, clearColor);
         gl4.glClearBufferfv(GL_DEPTH, 0, clearDepth);
-        
+
         update();
-        
-        ((UntexturedObjectsSolution)solution).render(gl4, transforms);
+
+        ((UntexturedObjectsSolution) solution).render(gl4, transforms);
     }
 
     private void update() {
@@ -120,11 +118,17 @@ public class UntexturedObjectsProblem extends Problem {
             for (int y = 0; y < objectsY; y++) {
 
                 for (int z = 0; z < objectsZ; z++) {
-
-                    transforms[m].rotationZ(angle);
-                    transforms[m].m30 = 2.0f * x - objectsX;
-                    transforms[m].m31 = 2.0f * y - objectsY;
-                    transforms[m].m32 = 2.0f * z - objectsZ;
+//
+                    float cos = (float) Math.cos(angle);
+                    float sin = (float) Math.sin(angle);
+                    // mat4.rotationZ(angle)
+                    transforms.putFloat(m * Mat4.SIZE + 0 * Float.BYTES, +cos);
+                    transforms.putFloat(m * Mat4.SIZE + 1 * Float.BYTES, +sin);
+                    transforms.putFloat(m * Mat4.SIZE + 4 * Float.BYTES, -sin);
+                    transforms.putFloat(m * Mat4.SIZE + 5 * Float.BYTES, +cos);
+                    transforms.putFloat(m * Mat4.SIZE + 12 * Float.BYTES, 2.0f * x - objectsX);
+                    transforms.putFloat(m * Mat4.SIZE + 13 * Float.BYTES, 2.0f * y - objectsY);
+                    transforms.putFloat(m * Mat4.SIZE + 14 * Float.BYTES, 2.0f * z - objectsZ);
 
                     m++;
                 }
@@ -142,7 +146,9 @@ public class UntexturedObjectsProblem extends Problem {
     @Override
     public void setSolution(GL4 gl4, Solution solution) {
         this.solution = solution;
-        ((UntexturedObjectsSolution) solution).init(gl4, vertices, indices, objectCount);
+        if (solution != null) {
+            ((UntexturedObjectsSolution) solution).init(gl4, vertices, indices, objectCount);
+        }
     }
 
     @Override

@@ -17,6 +17,9 @@ import glTest.solutions.null_.NullSolution;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLBufferSubData;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapPersistent;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapUnsynchronized;
+import glTest.solutions.untexturedObjects.drawLoop.UntexturedObjectsGLDrawLoop;
+import glTest.solutions.untexturedObjects.multiDraw.UntexturedObjectsGLMultiDraw;
+import glTest.solutions.untexturedObjects.multiDrawBuffer.UntexturedObjectsGLMultiDrawBuffer;
 import glTest.solutions.untexturedObjects.uniforms.UntexturedObjectsGLUniform;
 
 /**
@@ -62,7 +65,11 @@ public class ProblemFactory {
         problems.add(newProbl);
         solutions.put(newProbl.getName(),
                 new Solution[]{
-                    new UntexturedObjectsGLUniform()});
+                    new UntexturedObjectsGLUniform(),
+                    new UntexturedObjectsGLDrawLoop(),
+//                    Bug
+//                    new UntexturedObjectsGLMultiDraw(true),
+                    new UntexturedObjectsGLMultiDrawBuffer(false)});
     }
 
     public ArrayList<Problem> getProblems() {
