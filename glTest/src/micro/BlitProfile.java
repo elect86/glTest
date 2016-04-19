@@ -12,33 +12,22 @@ import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL;
-import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
-import static com.jogamp.opengl.GL.GL_STATIC_DRAW;
-import static com.jogamp.opengl.GL.GL_TRIANGLES;
-import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
-import static com.jogamp.opengl.GL2ES2.GL_QUERY_COUNTER_BITS;
-import static com.jogamp.opengl.GL2ES2.GL_TIME_ELAPSED;
 import static com.jogamp.opengl.GL3.*;
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.math.FloatUtil;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLBuffers;
-import com.jogamp.opengl.util.glsl.ShaderCode;
-import com.jogamp.opengl.util.glsl.ShaderProgram;
 import glTest.framework.BufferUtils;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 
 /**
  *
  * @author gbarbieri
  */
-public class BlitProfile implements GLEventListener, KeyListener {
+public class BlitProfile implements GLEventListener {
 
     public static GLWindow glWindow;
     public static Animator animator;
@@ -63,7 +52,6 @@ public class BlitProfile implements GLEventListener, KeyListener {
 
         BlitProfile blitProfile = new BlitProfile();
         glWindow.addGLEventListener(blitProfile);
-        glWindow.addKeyListener(blitProfile);
 
         animator = new Animator(glWindow);
         animator.start();
@@ -112,7 +100,7 @@ public class BlitProfile implements GLEventListener, KeyListener {
         gl3.glBlitFramebuffer(
                 0, 0, glWindow.getWidth(), glWindow.getHeight(),
                 0, 0, glWindow.getWidth(), glWindow.getHeight(),
-                GL_DEPTH_STENCIL_ATTACHMENT, GL_LINEAR);
+                GL_DEPTH_STENCIL_ATTACHMENT, GL_NEAREST);
 
         gl3.glEndQuery(GL_TIME_ELAPSED);
 
@@ -164,17 +152,5 @@ public class BlitProfile implements GLEventListener, KeyListener {
 
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-            BlitProfile.animator.stop();
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-
     }
 }
