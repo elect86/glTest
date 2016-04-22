@@ -5,21 +5,8 @@
  */
 package glTest.solutions.dynamicStreaming;
 
-import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
-import static com.jogamp.opengl.GL.GL_BLEND;
-import static com.jogamp.opengl.GL.GL_CULL_FACE;
-import static com.jogamp.opengl.GL.GL_DEPTH_TEST;
-import static com.jogamp.opengl.GL.GL_DYNAMIC_DRAW;
-import static com.jogamp.opengl.GL.GL_FLOAT;
-import static com.jogamp.opengl.GL.GL_FRONT;
-import static com.jogamp.opengl.GL.GL_MAP_WRITE_BIT;
-import static com.jogamp.opengl.GL.GL_NO_ERROR;
-import static com.jogamp.opengl.GL.GL_SCISSOR_TEST;
-import static com.jogamp.opengl.GL.GL_TRIANGLES;
-import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
 import com.jogamp.opengl.GL4;
-import static com.jogamp.opengl.GL4.GL_MAP_COHERENT_BIT;
-import static com.jogamp.opengl.GL4.GL_MAP_PERSISTENT_BIT;
+import static com.jogamp.opengl.GL4.*;
 import glTest.framework.ApplicationState;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
@@ -71,6 +58,7 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         gl4.glBindVertexArray(vertexArrayName.get(0));
         
         ApplicationState.animator.setUpdateFPSFrames(58, System.out);
+//        ApplicationState.tinyAnimator.setUpdateFps(50);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -92,7 +80,7 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         // Input Layout
         gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 2, GL_FLOAT, false, Vec2.SIZE, 0);
-        gl4.glEnableVertexAttribArray(0);
+        gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
 
         // Rasterizer State
         gl4.glDisable(GL_CULL_FACE);

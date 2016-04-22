@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package glTest.solutions.untexturedObjects.uniforms;
+package glTest.solutions.untexturedObjects.uniform;
 
 import static com.jogamp.opengl.GL.*;
 import com.jogamp.opengl.GL4;
@@ -25,7 +25,7 @@ import java.nio.IntBuffer;
 public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
 
     private static final String SHADER_SRC = "uniform";
-    protected static final String SHADERS_ROOT = "src/glTest/solutions/untexturedObjects/uniforms/shaders/";
+    protected static final String SHADERS_ROOT = "glTest/solutions/untexturedObjects/uniform/shaders/";
 
     private class Buffer {
 
@@ -64,6 +64,7 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
         gl4.glBindVertexArray(vertexArrayName.get(0));
 
         ApplicationState.animator.setUpdateFPSFrames(15, System.out);
+//        ApplicationState.tinyAnimator.setUpdateFps(15);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -116,7 +117,7 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
             gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM1, 1, false, transforms.asFloatBuffer());
             gl4.glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0);
         }
-        transforms.rewind();
+        transforms.position(0);
     }
 
     @Override

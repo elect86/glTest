@@ -8,7 +8,6 @@ package glTest.framework;
 import glTest.problems.NullProblem;
 import glTest.problems.Problem;
 import glTest.solutions.Solution;
-import com.jogamp.opengl.GL4;
 import java.util.ArrayList;
 import java.util.HashMap;
 import glTest.problems.DynamicStreamingProblem;
@@ -17,10 +16,13 @@ import glTest.solutions.null_.NullSolution;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLBufferSubData;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapPersistent;
 import glTest.solutions.dynamicStreaming.DynamicStreamingGLMapUnsynchronized;
+import glTest.solutions.untexturedObjects.bindless.UntexturedObjectsGLBindless;
+import glTest.solutions.untexturedObjects.bindlessIndirect.UntexturedObjectsGLBindlessIndirect;
+import glTest.solutions.untexturedObjects.bufferRange.UntexturedObjectsGLBufferRange;
+import glTest.solutions.untexturedObjects.bufferStorage.UntexturedObjectsGLBufferStorage;
 import glTest.solutions.untexturedObjects.drawLoop.UntexturedObjectsGLDrawLoop;
-import glTest.solutions.untexturedObjects.multiDraw.UntexturedObjectsGLMultiDraw;
 import glTest.solutions.untexturedObjects.multiDrawBuffer.UntexturedObjectsGLMultiDrawBuffer;
-import glTest.solutions.untexturedObjects.uniforms.UntexturedObjectsGLUniform;
+import glTest.solutions.untexturedObjects.uniform.UntexturedObjectsGLUniform;
 
 /**
  *
@@ -67,9 +69,16 @@ public class ProblemFactory {
                 new Solution[]{
                     new UntexturedObjectsGLUniform(),
                     new UntexturedObjectsGLDrawLoop(),
-//                    Bug
-//                    new UntexturedObjectsGLMultiDraw(true),
-                    new UntexturedObjectsGLMultiDrawBuffer(false)});
+                    //                    Bug
+                    //                    new UntexturedObjectsGLMultiDraw(true),
+                    new UntexturedObjectsGLMultiDrawBuffer(true),
+                    new UntexturedObjectsGLMultiDrawBuffer(false),
+                    new UntexturedObjectsGLBindless(),
+                    new UntexturedObjectsGLBindlessIndirect(), // warning, buffers seen as non-resident
+                    new UntexturedObjectsGLBufferRange(),
+                    new UntexturedObjectsGLBufferStorage(true),
+                    new UntexturedObjectsGLBufferStorage(false),
+                });
     }
 
     public ArrayList<Problem> getProblems() {

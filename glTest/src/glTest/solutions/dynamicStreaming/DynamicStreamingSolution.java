@@ -21,7 +21,7 @@ import java.nio.IntBuffer;
  */
 public abstract class DynamicStreamingSolution extends Solution {
 
-    protected static final String SHADERS_ROOT = "src/glTest/solutions/dynamicStreaming/shaders/";
+    protected static final String SHADERS_ROOT = "glTest/solutions/dynamicStreaming/shaders/";
 
     protected class Buffer {
 

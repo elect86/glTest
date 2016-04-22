@@ -83,6 +83,10 @@ public class RingBuffer {
         index = (index + 1) % sectors;
     }
 
+    public int getSectorOffset() {
+        return index * sectorSize;
+    }
+    
     public int getSectors() {
         return sectors;
     }

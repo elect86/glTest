@@ -36,4 +36,24 @@ public class GLUtilities {
 
         return shaderProgram.program();
     }
+
+    public static int createProgram(GL4 gl4, String shaderRoot, String vertShaderSrc, String fragShaderSrc) {
+
+        ShaderCode vs = ShaderCode.create(gl4, GL_VERTEX_SHADER, 1, GLUtilities.class,
+                new String[]{shaderRoot + vertShaderSrc + ".vert"}, true);
+        ShaderCode fs = ShaderCode.create(gl4, GL_FRAGMENT_SHADER, 1, GLUtilities.class,
+                new String[]{shaderRoot + fragShaderSrc + ".frag"}, true);
+
+        ShaderProgram shaderProgram = new ShaderProgram();
+        shaderProgram.add(vs);
+        shaderProgram.add(fs);
+        shaderProgram.link(gl4, System.out);
+
+        // Flag these now, they're either attached (linked in) and will be cleaned up with the link, or the
+        // link failed and we're about to lose track of them anyways.
+        vs.destroy(gl4);
+        fs.destroy(gl4);
+
+        return shaderProgram.program();
+    }
 }

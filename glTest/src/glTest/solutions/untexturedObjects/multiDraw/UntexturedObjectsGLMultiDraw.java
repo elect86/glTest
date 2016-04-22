@@ -27,7 +27,7 @@ import java.nio.IntBuffer;
 public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
 
     private static final String SHADER_SRC = "multi-draw";
-    protected static final String SHADERS_ROOT = "src/glTest/solutions/untexturedObjects/multiDraw/shaders/";
+    protected static final String SHADERS_ROOT = "glTest/solutions/untexturedObjects/multiDraw/shaders/";
 
     private class Buffer {
 
@@ -50,12 +50,12 @@ public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
-        if (!super.init(gl4, vertices, indices, objectCount)) {
+        if (useShaderDrawParameters && !gl4.isExtensionAvailable("GL_ARB_shader_draw_parameters")) {
+            System.err.println("Unable to initialize solution, ARB_shader_draw_parameters is required but not available.");
             return false;
         }
 
-        if (useShaderDrawParameters && !gl4.isExtensionAvailable("GL_ARB_shader_draw_parameters")) {
-            System.err.println("Unable to initialize solution, ARB_shader_draw_parameters is required but not available.");
+        if (!super.init(gl4, vertices, indices, objectCount)) {
             return false;
         }
 
@@ -156,20 +156,19 @@ public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
 
         gl4.glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferName.get(Buffer.TRASFORM));
         gl4.glBufferData(GL_SHADER_STORAGE_BUFFER, count * Mat4.SIZE, transforms, GL_DYNAMIC_DRAW);
-        
+
         gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, null, count, 0);
     }
-    
+
     @Override
     public boolean shutdown(GL4 gl4) {
 
-        if(useShaderDrawParameters) {
+        if (useShaderDrawParameters) {
             gl4.glDisableVertexAttribArray(Semantic.Attr.DRAW_ID);
         }
-        
+
         gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
-        
 
         gl4.glDeleteBuffers(Buffer.MAX, bufferName);
         gl4.glDeleteVertexArrays(1, vertexArrayName);

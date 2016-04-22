@@ -6,6 +6,7 @@
 package glTest.solutions.null_;
 
 import com.jogamp.opengl.GL4;
+import glTest.framework.ApplicationState;
 import glTest.solutions.Solution;
 
 /**

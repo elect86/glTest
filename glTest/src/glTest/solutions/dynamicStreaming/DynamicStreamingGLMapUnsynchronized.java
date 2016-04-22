@@ -21,7 +21,6 @@ import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
 import com.jogamp.opengl.GL4;
 import glTest.framework.ApplicationState;
-import glTest.framework.BufferUtils;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
 import glTest.framework.RingBuffer;
@@ -61,6 +60,7 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
         gl4.glBindVertexArray(vertexArrayName.get(0));
 
         ApplicationState.animator.setUpdateFPSFrames(5, System.out);
+//        ApplicationState.tinyAnimator.setUpdateFps(5);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }

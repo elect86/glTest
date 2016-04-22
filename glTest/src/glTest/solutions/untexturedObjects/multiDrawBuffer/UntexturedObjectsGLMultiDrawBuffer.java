@@ -9,6 +9,7 @@ import static com.jogamp.opengl.GL3ES3.*;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
+import glTest.framework.BufferUtils;
 import glTest.framework.DrawElementsIndirectCommand;
 import glTest.framework.GLUtilities;
 import glTest.solutions.untexturedObjects.UntexturedObjectsSolution;
@@ -26,7 +27,7 @@ import java.nio.IntBuffer;
 public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolution {
 
     private static final String SHADER_SRC = "multi-draw-buffer";
-    protected static final String SHADERS_ROOT = "src/glTest/solutions/untexturedObjects/multiDrawBuffer/shaders/";
+    protected static final String SHADERS_ROOT = "glTest/solutions/untexturedObjects/multiDrawBuffer/shaders/";
 
     private class Buffer {
 
@@ -50,17 +51,18 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
-        if (!super.init(gl4, vertices, indices, objectCount)) {
-            return false;
-        }
-
         if (useShaderDrawParameters && !gl4.isExtensionAvailable("GL_ARB_shader_draw_parameters")) {
             System.err.println("Unable to initialize solution, ARB_shader_draw_parameters is required but not available.");
             return false;
         }
 
+        if (!super.init(gl4, vertices, indices, objectCount)) {
+            return false;
+        }
+
         // Program
-        programName = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
+        programName = GLUtilities.createProgram(gl4, SHADERS_ROOT,
+                SHADER_SRC + (useShaderDrawParameters ? "-SDP" : "-NoSDP"), SHADER_SRC);
 
         if (programName == 0) {
             System.err.println("Unable to initialize solution " + getName() + ", shader compilation/linking failed.");
@@ -95,6 +97,8 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
             gl4.glVertexAttribIPointer(Semantic.Attr.DRAW_ID, 1, GL_UNSIGNED_INT, Integer.BYTES, 0);
             gl4.glVertexAttribDivisor(Semantic.Attr.DRAW_ID, 1);
             gl4.glEnableVertexAttribArray(Semantic.Attr.DRAW_ID);
+
+            BufferUtils.destroyDirectBuffer(drawIds);
         }
 
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
@@ -130,7 +134,7 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
             proj.mul(view, viewProj);
         }
         gl4.glUseProgram(programName);
-        gl4.glUniformMatrix4fv(glTest.solutions.untexturedObjects.multiDraw.Semantic.Uniform.TRANSFORM0, 1, false, viewProj.toDfb(matBuffer));
+        gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM0, 1, false, viewProj.toDfb(matBuffer));
 
         // Rasterizer State
         gl4.glEnable(GL_CULL_FACE);
@@ -166,7 +170,23 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
     }
 
     @Override
+    public boolean shutdown(GL4 gl4) {
+
+        gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
+        gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
+        if (!useShaderDrawParameters) {
+            gl4.glDisableVertexAttribArray(Semantic.Attr.DRAW_ID);
+        }
+
+        gl4.glDeleteBuffers(Buffer.MAX, bufferName);
+        gl4.glDeleteVertexArrays(1, vertexArrayName);
+        gl4.glDeleteProgram(programName);
+
+        return true;
+    }
+
+    @Override
     public String getName() {
-        return "GLMultiDrawBuffer";
+        return "GLMultiDrawBuffer" + (useShaderDrawParameters ? "-SDP" : "-NoSDP");
     }
 }

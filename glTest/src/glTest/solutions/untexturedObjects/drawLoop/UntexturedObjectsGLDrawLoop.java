@@ -26,7 +26,7 @@ import java.nio.IntBuffer;
 public class UntexturedObjectsGLDrawLoop extends UntexturedObjectsSolution {
 
     private static final String SHADER_SRC = "draw-loop";
-    protected static final String SHADERS_ROOT = "src/glTest/solutions/untexturedObjects/drawLoop/shaders/";
+    protected static final String SHADERS_ROOT = "glTest/solutions/untexturedObjects/drawLoop/shaders/";
 
     private class Buffer {
 

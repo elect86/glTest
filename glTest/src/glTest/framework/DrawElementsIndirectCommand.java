@@ -12,11 +12,12 @@ package glTest.framework;
 public class DrawElementsIndirectCommand {
 
     public static final int SIZE = 5 * Integer.BYTES;
-    public static final int OFFSET_COUNT = 0 * Integer.BYTES;
-    public static final int OFFSET_INSTANCE_COUNT = 1 * Integer.BYTES;
-    public static final int OFFSET_FIRST_INDEX = 2 * Integer.BYTES;
-    public static final int OFFSET_BASE_VERTEX = 3 * Integer.BYTES;
-    public static final int OFFSET_BASE_INSTANCE = 4 * Integer.BYTES;
+    public static final int OFFSET_COUNT = 0;
+    public static final int OFFSET_INSTANCE_COUNT = OFFSET_COUNT + Integer.BYTES;
+    public static final int OFFSET_FIRST_INDEX = OFFSET_INSTANCE_COUNT + Integer.BYTES;
+    public static final int OFFSET_BASE_VERTEX = OFFSET_FIRST_INDEX + Integer.BYTES;
+    public static final int OFFSET_BASE_INSTANCE = OFFSET_BASE_VERTEX + Integer.BYTES;
+
     public int count;
     public int instanceCount;
     public int firstIndex;

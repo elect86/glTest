@@ -11,7 +11,6 @@ import com.jogamp.newt.Screen;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;
 import com.jogamp.newt.opengl.GLWindow;
-import com.jogamp.opengl.FPSCounter;
 import static com.jogamp.opengl.GL2ES2.*;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
@@ -20,6 +19,7 @@ import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
+import com.jogamp.opengl.util.AnimatorBase;
 import com.jogamp.opengl.util.GLBuffers;
 import glm.vec._2.i.Vec2i;
 import java.util.ArrayList;
@@ -34,6 +34,13 @@ import java.nio.IntBuffer;
 public class ApplicationState implements GLEventListener, KeyListener {
 
     public static final Vec2i RESOLUTION = new Vec2i(1024, 768);
+
+    public static void main(String[] args) throws InterruptedException {
+
+        ApplicationState app = new ApplicationState();
+        app.setup();
+    }
+
     private ProblemFactory factory;
     private ArrayList<Problem> problems;
     private Solution[] solutions;
@@ -78,9 +85,15 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         System.out.println("GL created successfully! Info follows.");
 
-        animator = new Animator(glWindow);
+//        glWindow.setExclusiveContextThread(new Thread());
+        animator = new Animator();
         animator.setRunAsFastAsPossible(true);
-        animator.setUpdateFPSFrames(FPSCounter.DEFAULT_FRAMES_PER_INTERVAL, System.out);
+        animator.setModeBits(false, AnimatorBase.MODE_EXPECT_AWT_RENDERING_THREAD);
+        animator.add(glWindow);
+        animator.setExclusiveContext(true);
+
+        glWindow.setExclusiveContextThread(animator.getExclusiveContextThread());
+//        animator.setUpdateFPSFrames(30_000, System.out);
         animator.start();
     }
 
@@ -252,7 +265,7 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         int solutionId = problem.getSolutionId();
         solutionId = (solutionId + solutionCount + offsetSolution) % solutionCount;
-        
+
         solution = solutions[solutionId];
 
         initSolution(gl4, solutionId);
@@ -294,14 +307,14 @@ public class ApplicationState implements GLEventListener, KeyListener {
     private void onProblemOrSolutionSet() {
 
         System.gc();
-        
+
         String newTitle = rootTitle + " - " + problem.getName();
 
         if (solution != null) {
             newTitle += " - " + solution.getName();
         }
         glWindow.setTitle(newTitle);
-        
+
         System.gc();
 
         animator.resetFPSCounter();
