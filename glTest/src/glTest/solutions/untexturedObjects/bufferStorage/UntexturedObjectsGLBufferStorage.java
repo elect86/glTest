@@ -63,7 +63,7 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1),
             bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
     private boolean useShaderDrawParameters;
-    private ByteBuffer transformPtr;
+    private ByteBuffer transformPtr, commandBuffer;
     private RingBuffer transformRingBuffer;
 
     public UntexturedObjectsGLBufferStorage(boolean useShaderDrawParameters) {
@@ -131,20 +131,10 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
         gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.capacity(), indices, GL_STATIC_DRAW);
 
-        ByteBuffer commandBuffer = GLBuffers.newDirectByteBuffer(DrawElementsIndirectCommand.SIZE * objectCount);
-        for (int u = 0; u < objectCount; u++) {
-
-            int offset = u * DrawElementsIndirectCommand.SIZE;
-            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_COUNT, indexCount);
-            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_INSTANCE_COUNT, 1);
-            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_FIRST_INDEX, 0);
-            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_VERTEX, 0);
-            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_INSTANCE, useShaderDrawParameters ? 0 : u);
-        }
-
+        commandBuffer = GLBuffers.newDirectByteBuffer(DrawElementsIndirectCommand.SIZE * objectCount);
         gl4.glBindBuffer(GL_DRAW_INDIRECT_BUFFER, bufferName.get(Buffer.INDIRECT_COMMAND));
-        gl4.glBufferStorage(GL_DRAW_INDIRECT_BUFFER, commandBuffer.capacity(), commandBuffer, 0);
-
+        gl4.glBufferStorage(GL_DRAW_INDIRECT_BUFFER, commandBuffer.capacity(), null, GL_DYNAMIC_STORAGE_BIT);
+        
         transformRingBuffer = new RingBuffer(GLApi.tripleBuffer, Mat4.SIZE * objectCount);
         int mapFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
         int createFlags = mapFlags | GL_DYNAMIC_STORAGE_BIT;
@@ -153,7 +143,7 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
         gl4.glBufferStorage(GL_SHADER_STORAGE_BUFFER, transformRingBuffer.getSize(), null, createFlags);
         transformPtr = gl4.glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, transformRingBuffer.getSize(), mapFlags);
 
-        ApplicationState.animator.setUpdateFPSFrames(30, System.out);
+        ApplicationState.animator.setUpdateFPSFrames(useShaderDrawParameters ? 70 : 200, System.out);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -190,23 +180,32 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
         // Depth Stencil State
         gl4.glEnable(GL_DEPTH_TEST);
         gl4.glDepthMask(true);
+        
+        for (int u = 0; u < objectCount; u++) {
 
-//        commandRingBuffer.wait(gl4);
-//        for (int u = 0; u < xformCount; u++) {
-//
-//            int offset = commandRingBuffer.getSectorOffset() + u * DrawElementsIndirectCommand.SIZE;
-//            pointer[Pointer.COMMANDS].putInt(offset + DrawElementsIndirectCommand.OFFSET_COUNT, indexCount);
-//            pointer[Pointer.COMMANDS].putInt(offset + DrawElementsIndirectCommand.OFFSET_INSTANCE_COUNT, 1);
-//            pointer[Pointer.COMMANDS].putInt(offset + DrawElementsIndirectCommand.OFFSET_FIRST_INDEX, 0);
-//            pointer[Pointer.COMMANDS].putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_VERTEX, 0);
-//            pointer[Pointer.COMMANDS].putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_INSTANCE,
-//                    useShaderDrawParameters ? 0 : u);
-//        }
+            int offset = u * DrawElementsIndirectCommand.SIZE;
+            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_COUNT, indexCount);
+            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_INSTANCE_COUNT, 1);
+            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_FIRST_INDEX, 0);
+            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_VERTEX, 0);
+            commandBuffer.putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_INSTANCE, useShaderDrawParameters ? 0 : u);
+        }
+
+        gl4.glBindBuffer(GL_DRAW_INDIRECT_BUFFER, bufferName.get(Buffer.INDIRECT_COMMAND));
+        gl4.glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, commandBuffer.capacity(), commandBuffer.rewind());
+
         transformRingBuffer.wait(gl4);
 
-        for (int i = 0; i < Mat4.SIZE * objectCount; i++) {
-            transformPtr.put(transformRingBuffer.getSectorOffset() + i, transforms.get(i));
-        }
+//        for (int i = 0; i < Mat4.SIZE * objectCount; i++) {
+//            transformPtr.put(transformRingBuffer.getSectorOffset() + i, transforms.get(i));
+//        }
+        transformPtr.position(transformRingBuffer.getSectorOffset());
+        transformPtr.put(transforms);
+        transformPtr.position(0);
+        transforms.position(0);
+//        gl4.glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferName.get(Buffer.TRASFORM));
+//        gl4.glBufferSubData(GL_SHADER_STORAGE_BUFFER, transformRingBuffer.getSectorOffset(), transforms.capacity(), 
+//                transforms);
 
         gl4.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM0_, bufferName.get(Buffer.TRASFORM),
                 transformRingBuffer.getSectorOffset(), transformRingBuffer.getSectorSize());
@@ -214,9 +213,10 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
         // We didn't use MAP_COHERENT here.
         gl4.glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
-//        LongBuffer ptr = GLBuffers.newDirectLongBuffer(1);
+        ByteBuffer ptr = ByteBuffer.allocate(Long.BYTES);
+        ptr.asLongBuffer().put(0, 0);
 //        ptr.put(0, commandRingBuffer.getSectorOffset());
-        gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, null, xformCount, 0);
+        gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, ptr, xformCount, 0);
 
         transformRingBuffer.lockAndUpdate(gl4);
 //        commandRingBuffer.lockAndUpdate(gl4);
@@ -236,6 +236,8 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
         gl4.glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferName.get(Buffer.TRASFORM));
         gl4.glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
+        BufferUtils.destroyDirectBuffer(commandBuffer);
+        
         gl4.glDeleteBuffers(Buffer.MAX, bufferName);
         gl4.glDeleteVertexArrays(1, vertexArrayName);
         gl4.glDeleteProgram(programName);

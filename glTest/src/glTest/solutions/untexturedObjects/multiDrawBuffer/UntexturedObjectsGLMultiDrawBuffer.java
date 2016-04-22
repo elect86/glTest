@@ -111,7 +111,7 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
         // Set the command buffer size.
         commands = GLBuffers.newDirectByteBuffer(DrawElementsIndirectCommand.SIZE * objectCount);
 
-        ApplicationState.animator.setUpdateFPSFrames(40, System.out);
+        ApplicationState.animator.setUpdateFPSFrames(useShaderDrawParameters? 60 : 130, System.out);
 
         return gl4.glGetError() == GL_NO_ERROR;
     }
@@ -164,7 +164,7 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
         gl4.glBufferData(GL_SHADER_STORAGE_BUFFER, count * Mat4.SIZE, transforms, GL_DYNAMIC_DRAW);
 
         gl4.glBindBuffer(GL_DRAW_INDIRECT_BUFFER, bufferName.get(Buffer.COMMAND));
-        gl4.glBufferData(GL_DRAW_INDIRECT_BUFFER, count * DrawElementsIndirectCommand.SIZE, commands, GL_DYNAMIC_DRAW);
+        gl4.glBufferData(GL_DRAW_INDIRECT_BUFFER, commands.capacity(), commands, GL_DYNAMIC_DRAW);
 
         gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, null, count, 0);
     }

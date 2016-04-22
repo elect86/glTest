@@ -113,22 +113,27 @@ public class UntexturedObjectsProblem extends Problem {
 
         int m = 0;
 
+        // mat4.rotationZ(angle)
+        float cos = (float) Math.cos(angle);
+        float sin = (float) Math.sin(angle);
+
         for (int x = 0; x < objectsX; x++) {
 
             for (int y = 0; y < objectsY; y++) {
 
                 for (int z = 0; z < objectsZ; z++) {
-//
-                    float cos = (float) Math.cos(angle);
-                    float sin = (float) Math.sin(angle);
+
                     // mat4.rotationZ(angle)
-                    transforms.putFloat(m * Mat4.SIZE + 0 * Float.BYTES, +cos);
-                    transforms.putFloat(m * Mat4.SIZE + 1 * Float.BYTES, +sin);
-                    transforms.putFloat(m * Mat4.SIZE + 4 * Float.BYTES, -sin);
-                    transforms.putFloat(m * Mat4.SIZE + 5 * Float.BYTES, +cos);
-                    transforms.putFloat(m * Mat4.SIZE + 12 * Float.BYTES, 2.0f * x - objectsX);
-                    transforms.putFloat(m * Mat4.SIZE + 13 * Float.BYTES, 2.0f * y - objectsY);
-                    transforms.putFloat(m * Mat4.SIZE + 14 * Float.BYTES, 2.0f * z - objectsZ);
+//                    float cos = (float) Math.cos(angle);
+//                    float sin = (float) Math.sin(angle);
+                    transforms
+                            .putFloat(m * Mat4.SIZE + 0 * Float.BYTES, +cos)
+                            .putFloat(m * Mat4.SIZE + 1 * Float.BYTES, +sin)
+                            .putFloat(m * Mat4.SIZE + 4 * Float.BYTES, -sin)
+                            .putFloat(m * Mat4.SIZE + 5 * Float.BYTES, +cos)
+                            .putFloat(m * Mat4.SIZE + 12 * Float.BYTES, 2.0f * x - objectsX)
+                            .putFloat(m * Mat4.SIZE + 13 * Float.BYTES, 2.0f * y - objectsY)
+                            .putFloat(m * Mat4.SIZE + 14 * Float.BYTES, 2.0f * z - objectsZ);
 
                     m++;
                 }

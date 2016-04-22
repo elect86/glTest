@@ -48,6 +48,10 @@ public abstract class DynamicStreamingSolution extends Solution {
 
     public abstract void render(GL4 gl4, ByteBuffer vertices);
 
+    public void render(GL4 gl4, float[][] vertices) {
+
+    }
+
     @Override
     public boolean shutdown(GL4 gl4) {
 
