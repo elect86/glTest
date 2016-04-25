@@ -39,7 +39,6 @@ import glm.mat._4.Mat4;
 import glm.vec._3.Vec3;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.LongBuffer;
 
 /**
  *
@@ -145,12 +144,12 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
 
         ApplicationState.animator.setUpdateFPSFrames(useShaderDrawParameters ? 70 : 200, System.out);
 
-        return gl4.glGetError() == GL_NO_ERROR;
+        return GLApi.getError(gl4) == GL_NO_ERROR;
     }
 
     @Override
     public void render(GL4 gl4, ByteBuffer transforms) {
-
+        
         int xformCount = transforms.capacity() / Mat4.SIZE;
         assert (xformCount <= transformRingBuffer.getSize());
 
@@ -213,10 +212,10 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
         // We didn't use MAP_COHERENT here.
         gl4.glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
-        ByteBuffer ptr = ByteBuffer.allocate(Long.BYTES);
-        ptr.asLongBuffer().put(0, 0);
+//        ByteBuffer ptr = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+//        ptr.asLongBuffer().put(0, 0);
 //        ptr.put(0, commandRingBuffer.getSectorOffset());
-        gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, ptr, xformCount, 0);
+        gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, null, xformCount, 0);
 
         transformRingBuffer.lockAndUpdate(gl4);
 //        commandRingBuffer.lockAndUpdate(gl4);

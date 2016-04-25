@@ -11,6 +11,7 @@ import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
 import glTest.framework.BufferUtils;
 import glTest.framework.DrawElementsIndirectCommand;
+import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
 import glTest.solutions.untexturedObjects.UntexturedObjectsSolution;
 import glf.Vertex_v3fn3f;
@@ -113,7 +114,7 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
 
         ApplicationState.animator.setUpdateFPSFrames(useShaderDrawParameters? 60 : 130, System.out);
 
-        return gl4.glGetError() == GL_NO_ERROR;
+        return GLApi.getError(gl4) == GL_NO_ERROR;
     }
 
     @Override

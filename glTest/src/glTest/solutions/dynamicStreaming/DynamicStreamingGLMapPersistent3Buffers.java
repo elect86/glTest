@@ -7,6 +7,7 @@ package glTest.solutions.dynamicStreaming;
 
 import com.jogamp.opengl.GL4;
 import static com.jogamp.opengl.GL4.*;
+import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
@@ -14,15 +15,25 @@ import glTest.framework.RingBuffer;
 import glm.vec._2.Vec2;
 import java.nio.ByteBuffer;
 import static glTest.problems.DynamicStreamingProblem.vertsPerParticle;
+import java.nio.IntBuffer;
 
 /**
  *
  * @author elect
  */
-public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
+public class DynamicStreamingGLMapPersistent3Buffers extends DynamicStreamingSolution {
 
-    private RingBuffer particleRingBuffer;
-    private ByteBuffer vertexDataPtr;
+    protected class Buffer_ {
+
+        public static final int UNIFORM = 0;
+        public static final int VERTEX0 = 1;
+        public static final int VERTEX1 = 2;
+        public static final int VERTEX2 = 3;
+        public static final int MAX = 4;
+    }
+    private IntBuffer bufferName_ = GLBuffers.newDirectIntBuffer(Buffer_.MAX);
+    private int writeId = 0, readId = 1;
+    private ByteBuffer[] vertexDataPtr = new ByteBuffer[3];
 
     @Override
     public boolean init(GL4 gl4) {
@@ -34,7 +45,7 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         }
 
         // Gen Buffers
-        gl4.glGenBuffers(Buffer.MAX, bufferName);
+        gl4.glGenBuffers(Buffer_.MAX, bufferName_);
 
         // Program
         program = GLUtilities.createProgram(gl4, SHADERS_ROOT, SHADER_SRC);
@@ -46,13 +57,12 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         }
 
         // Dynamic vertex buffer
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
-
-        particleRingBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
-
         int flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-        gl4.glBufferStorage(GL_ARRAY_BUFFER, particleRingBuffer.getSize(), null, flags);
-        vertexDataPtr = gl4.glMapBufferRange(GL_ARRAY_BUFFER, 0, particleRingBuffer.getSize(), flags);
+        for (int i = 0; i < 3; i++) {
+            gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName_.get(Buffer_.VERTEX0 + i));
+            gl4.glBufferStorage(GL_ARRAY_BUFFER, Vec2.SIZE * vertexCount, null, flags);
+            vertexDataPtr[i] = gl4.glMapBufferRange(GL_ARRAY_BUFFER, 0, Vec2.SIZE * vertexCount, flags);
+        }
 
         gl4.glGenVertexArrays(1, vertexArrayName);
         gl4.glBindVertexArray(vertexArrayName.get(0));
@@ -72,12 +82,12 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
         constants.putFloat(Float.BYTES * 0, +2.0f / width);
         constants.putFloat(Float.BYTES * 1, -2.0f / height);
 
-        gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.UNIFORM));
+        gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName_.get(Buffer_.UNIFORM));
         gl4.glBufferData(GL_UNIFORM_BUFFER, constants.capacity(), constants, GL_DYNAMIC_DRAW);
-        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 0, bufferName.get(Buffer.UNIFORM));
+        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 0, bufferName_.get(Buffer_.UNIFORM));
 
         // Input Layout
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
+        gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName_.get(Buffer_.VERTEX0 + readId));
         gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 2, GL_FLOAT, false, Vec2.SIZE, 0);
         gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
 
@@ -97,14 +107,12 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
 
         int particleCount = vertexCount / vertsPerParticle;
         int particleSizeBytes = vertsPerParticle * Vec2.SIZE;
-        int startIndex = startDestOffset / Vec2.SIZE;
 
         /**
          * Need to wait for this area to become available. If we've sized things properly,
          * it will always be available right away.
          */
-        particleRingBuffer.wait(gl4);
-
+//        particleRingBuffer.wait(gl4);
         for (int i = 0; i < particleCount; ++i) {
 
             int vertexOffset = i * vertsPerParticle;
@@ -113,20 +121,20 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
              * 20% faster, 60 vs 47 fps.
              */
             for (int j = 0; j < particleSizeBytes; j++) {
-                vertexDataPtr.put(dstOffset + j, vertices.get(vertexOffset * Vec2.SIZE + j));
+                vertexDataPtr[writeId].put(dstOffset + j, vertices.get(vertexOffset * Vec2.SIZE + j));
             }
 //            vertices.position(vertexOffset * Vec2.SIZE);
 //            vertices.limit(vertices.position() + particleSizeBytes);
 //            vertexDataPtr.position(dstOffset);
 //            vertexDataPtr.put(vertices);
 
-            gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
+            gl4.glDrawArrays(GL_TRIANGLES, vertexOffset, vertsPerParticle);
         }
 
         // Lock this area for the future.
-        particleRingBuffer.lockAndUpdate(gl4);
-
-        startDestOffset = (startDestOffset + (particleCount * particleSizeBytes)) % particleRingBuffer.getSize();
+//        particleRingBuffer.lockAndUpdate(gl4);
+        writeId = (++writeId) % 3;
+        readId = (++readId) % 3;
     }
 
     @Override
@@ -176,9 +184,9 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
 
             int vertexOffset = i * vertsPerParticle;
             int dstOffset = startDestOffset + (i * particleSizeBytes);
-            
-            vertexDataPtr.position(dstOffset);
-            vertexDataPtr.asFloatBuffer().put(vertices[i]);
+
+//            vertexDataPtr.position(dstOffset);
+//            vertexDataPtr.asFloatBuffer().put(vertices[i]);
 
             gl4.glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle);
         }
@@ -209,6 +217,6 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
 
     @Override
     public String getName() {
-        return "GLMapPersistent";
+        return "GLMapPersistent 3 Buffers";
     }
 }

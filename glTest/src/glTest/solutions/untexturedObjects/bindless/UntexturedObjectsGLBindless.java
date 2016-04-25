@@ -10,6 +10,7 @@ import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
 import glTest.framework.BufferUtils;
+import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
 import glTest.solutions.untexturedObjects.UntexturedObjectsSolution;
 import glm.glm;
@@ -92,7 +93,7 @@ public class UntexturedObjectsGLBindless extends UntexturedObjectsSolution {
 
         ApplicationState.animator.setUpdateFPSFrames(5, System.out);
 
-        return gl4.glGetError() == GL_NO_ERROR;
+        return GLApi.getError(gl4) == GL_NO_ERROR;
     }
 
     @Override
@@ -149,7 +150,6 @@ public class UntexturedObjectsGLBindless extends UntexturedObjectsSolution {
             gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM1, 1, false, transforms.asFloatBuffer());
             gl4.glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0);
         }
-        transforms.position(0);
     }
 
     @Override

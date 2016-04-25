@@ -6,16 +6,10 @@
 
 // Uniform
 #define TRANSFORM0  0
-
-// Storage
-#define TRANSFORM0_ 0
+#define TRANSFORM1  1
 
 // Interface
 #define BLOCK   0
-
-// Requirements
-#extension GL_ARB_shader_draw_parameters : require
-#extension GL_ARB_shader_storage_buffer_object : require
 
 precision highp float;
 precision highp int;
@@ -28,9 +22,9 @@ layout (location = COLOR) in vec3 inColor;
 
 // Uniforms / SSBO -------------------------------------------------------------
 layout (location = TRANSFORM0) uniform mat4 viewProjection;
-layout (binding = TRANSFORM0_) buffer Transform
+layout (binding = TRANSFORM1) uniform Transform
 {
-    mat4 world[];
+    mat4 world;
 } t1;
 
 // Output ----------------------------------------------------------------------
@@ -42,7 +36,7 @@ layout (location = BLOCK) out Block
 // Functions -------------------------------------------------------------------
 void main()
 {
-    vec3 worldPos = vec3(t1.world[gl_DrawIDARB] * vec4(inPos, 1));
+    vec3 worldPos = vec3(t1.world * vec4(inPos, 1));
     gl_Position = viewProjection * vec4(worldPos, 1);
     outBlock.color = inColor;
 }

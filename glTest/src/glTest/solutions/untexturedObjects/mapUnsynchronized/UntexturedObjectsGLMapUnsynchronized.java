@@ -3,18 +3,34 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package glTest.solutions.untexturedObjects.multiDraw;
+package glTest.solutions.untexturedObjects.mapUnsynchronized;
 
-import static com.jogamp.opengl.GL.*;
+import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
+import static com.jogamp.opengl.GL.GL_BLEND;
+import static com.jogamp.opengl.GL.GL_CULL_FACE;
+import static com.jogamp.opengl.GL.GL_DEPTH_TEST;
+import static com.jogamp.opengl.GL.GL_DYNAMIC_DRAW;
+import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
+import static com.jogamp.opengl.GL.GL_FLOAT;
+import static com.jogamp.opengl.GL.GL_FRONT;
+import static com.jogamp.opengl.GL.GL_MAP_INVALIDATE_RANGE_BIT;
+import static com.jogamp.opengl.GL.GL_MAP_UNSYNCHRONIZED_BIT;
+import static com.jogamp.opengl.GL.GL_MAP_WRITE_BIT;
+import static com.jogamp.opengl.GL.GL_NO_ERROR;
+import static com.jogamp.opengl.GL.GL_SCISSOR_TEST;
+import static com.jogamp.opengl.GL.GL_STATIC_DRAW;
+import static com.jogamp.opengl.GL.GL_TRIANGLES;
+import static com.jogamp.opengl.GL.GL_UNSIGNED_INT;
+import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
 import static com.jogamp.opengl.GL3ES3.GL_SHADER_STORAGE_BUFFER;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
-import glTest.framework.DrawElementsIndirectCommand;
+import glTest.framework.BufferUtils;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
+import glTest.framework.RingBuffer;
 import glTest.solutions.untexturedObjects.UntexturedObjectsSolution;
-import glf.Vertex_v3fn3f;
 import glm.glm;
 import glm.mat._4.Mat4;
 import glm.vec._3.Vec3;
@@ -25,36 +41,26 @@ import java.nio.IntBuffer;
  *
  * @author GBarbieri
  */
-public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
+public class UntexturedObjectsGLMapUnsynchronized extends UntexturedObjectsSolution {
 
-    private static final String SHADER_SRC = "multi-draw";
-    protected static final String SHADERS_ROOT = "glTest/solutions/untexturedObjects/multiDraw/shaders/";
+    private static final String SHADER_SRC = "map-unsynchronized";
+    protected static final String SHADERS_ROOT = "glTest/solutions/untexturedObjects/mapUnsynchronized/shaders/";
 
     private class Buffer {
 
         public static final int VERTEX = 0;
         public static final int ELEMENT = 1;
-        public static final int DRAW_ID = 2;
-        public static final int TRASFORM = 3;
+        public static final int TRASFORM = 2;
+        public static final int DRAW_ID = 3;
         public static final int MAX = 4;
     }
 
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1),
             bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
-    private boolean useShaderDrawParameters;
-    private ByteBuffer commands;
-
-    public UntexturedObjectsGLMultiDraw(boolean useShaderDrawParameters) {
-        this.useShaderDrawParameters = useShaderDrawParameters;
-    }
+    private RingBuffer ringBuffer;
 
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
-
-        if (useShaderDrawParameters && !gl4.isExtensionAvailable("GL_ARB_shader_draw_parameters")) {
-            System.err.println("Unable to initialize solution, ARB_shader_draw_parameters is required but not available.");
-            return false;
-        }
 
         if (!super.init(gl4, vertices, indices, objectCount)) {
             return false;
@@ -77,14 +83,12 @@ public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
         gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl4.glBufferData(GL_ARRAY_BUFFER, vertices.capacity(), vertices, GL_STATIC_DRAW);
 
-        gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex_v3fn3f.SIZE, 0);
-        gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 3, GL_FLOAT, false, Vertex_v3fn3f.SIZE, Vec3.SIZE);
+        gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vec3.SIZE * 2, 0);
+        gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 3, GL_FLOAT, false, Vec3.SIZE * 2, Vec3.SIZE);
         gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glEnableVertexAttribArray(Semantic.Attr.COLOR);
 
-        // If we aren't using shader draw parameters, use the workaround instead.
-        if (!useShaderDrawParameters) {
-
+        {
             IntBuffer drawIds = GLBuffers.newDirectIntBuffer(objectCount);
             for (int i = 0; i < objectCount; i++) {
                 drawIds.put(i, i);
@@ -96,17 +100,19 @@ public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
             gl4.glVertexAttribIPointer(Semantic.Attr.DRAW_ID, 1, GL_UNSIGNED_INT, Integer.BYTES, 0);
             gl4.glVertexAttribDivisor(Semantic.Attr.DRAW_ID, 1);
             gl4.glEnableVertexAttribArray(Semantic.Attr.DRAW_ID);
+
+            BufferUtils.destroyDirectBuffer(drawIds);
         }
 
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
         gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.capacity(), indices, GL_STATIC_DRAW);
 
-        gl4.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM, bufferName.get(Buffer.TRASFORM));
+        gl4.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM0_, bufferName.get(Buffer.TRASFORM));
 
-        // Set the command buffer size.
-        commands = GLBuffers.newDirectByteBuffer(DrawElementsIndirectCommand.SIZE * objectCount);
+        ringBuffer = new RingBuffer(GLApi.tripleBuffer, Mat4.SIZE * objectCount);
+        gl4.glBufferData(GL_SHADER_STORAGE_BUFFER, ringBuffer.getSize(), null, GL_DYNAMIC_DRAW);
 
-        ApplicationState.animator.setUpdateFPSFrames(15, System.out);
+        ApplicationState.animator.setUpdateFPSFrames(1, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }
@@ -144,45 +150,55 @@ public class UntexturedObjectsGLMultiDraw extends UntexturedObjectsSolution {
         gl4.glEnable(GL_DEPTH_TEST);
         gl4.glDepthMask(true);
 
-        for (int u = 0; u < count; u++) {
+        ringBuffer.wait(gl4);
 
-            int offset = u * DrawElementsIndirectCommand.SIZE;
+        gl4.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM0_, bufferName.get(Buffer.TRASFORM), 
+                ringBuffer.getSectorOffset(), ringBuffer.getSectorSize());
+        
+        int access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT;
+        for (int i = 0; i < count; i++) {
 
-            commands.putInt(offset + DrawElementsIndirectCommand.OFFSET_COUNT, indexCount);
-            commands.putInt(offset + DrawElementsIndirectCommand.OFFSET_INSTANCE_COUNT, 1);
-            commands.putInt(offset + DrawElementsIndirectCommand.OFFSET_FIRST_INDEX, 0);
-            commands.putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_VERTEX, 0);
-            commands.putInt(offset + DrawElementsIndirectCommand.OFFSET_BASE_INSTANCE, useShaderDrawParameters ? 0 : u);
+            int offset = ringBuffer.getSectorOffset() + i * Mat4.SIZE;
+            ByteBuffer dst = gl4.glMapBufferRange(GL_SHADER_STORAGE_BUFFER, offset, Mat4.SIZE, access);
+
+            if (dst == null) {
+                continue;
+            }
+            /**
+             * Equivalent. put() ~ 10ms/800ms slower
+             */
+//            for (int j = 0; j < Mat4.SIZE; j++) {
+//                dst.put(j, transforms.get(i*Mat4.SIZE+j));
+//            }
+            transforms.position(i * Mat4.SIZE);
+            transforms.limit(transforms.position() + Mat4.SIZE);
+            dst.put(transforms);
+            
+            gl4.glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+            gl4.glDrawElementsInstancedBaseInstance(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0, 1, i);
         }
-
-        gl4.glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferName.get(Buffer.TRASFORM));
-        gl4.glBufferData(GL_SHADER_STORAGE_BUFFER, count * Mat4.SIZE, transforms, GL_DYNAMIC_DRAW);
-
-        gl4.glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_SHORT, null, count, 0);
+        
+        ringBuffer.lockAndUpdate(gl4);
     }
 
     @Override
     public boolean shutdown(GL4 gl4) {
 
-        if (useShaderDrawParameters) {
-            gl4.glDisableVertexAttribArray(Semantic.Attr.DRAW_ID);
-        }
-
         gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
+        gl4.glDisableVertexAttribArray(Semantic.Attr.DRAW_ID);
 
         gl4.glDeleteBuffers(Buffer.MAX, bufferName);
         gl4.glDeleteVertexArrays(1, vertexArrayName);
         gl4.glDeleteProgram(programName);
-
-        super.shutdown(gl4);
 
         return true;
     }
 
     @Override
     public String getName() {
-        return "GLMultiDraw";
+        return "GLMapUnsynchronized";
     }
 
 }

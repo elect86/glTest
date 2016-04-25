@@ -10,6 +10,7 @@ import static com.jogamp.opengl.GL3ES3.GL_SHADER_STORAGE_BUFFER;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
+import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
 import glTest.solutions.untexturedObjects.UntexturedObjectsSolution;
 import glf.Vertex_v3fn3f;
@@ -86,9 +87,9 @@ public class UntexturedObjectsGLDrawLoop extends UntexturedObjectsSolution {
 
         gl4.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM, bufferName.get(Buffer.TRASFORM));
 
-        ApplicationState.animator.setUpdateFPSFrames(15, System.out);
+        ApplicationState.animator.setUpdateFPSFrames(42, System.out);
 
-        return gl4.glGetError() == GL_NO_ERROR;
+        return GLApi.getError(gl4) == GL_NO_ERROR;
     }
 
     @Override

@@ -151,6 +151,8 @@ public class UntexturedObjectsProblem extends Problem {
     @Override
     public void setSolution(GL4 gl4, Solution solution) {
         this.solution = solution;
+        transforms.position(0);
+        transforms.limit(transforms.capacity());
         if (solution != null) {
             ((UntexturedObjectsSolution) solution).init(gl4, vertices, indices, objectCount);
         }

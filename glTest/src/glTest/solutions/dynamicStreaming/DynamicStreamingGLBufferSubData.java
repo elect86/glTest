@@ -44,7 +44,7 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
 
         // Dynamic vertex buffer
         startDestOffset = 0;
-        particleRingBuffer = new RingBuffer(GLApi.tripleBuffer, Vec2.SIZE * vertexCount);
+        particleRingBuffer = new RingBuffer(1, Vec2.SIZE * vertexCount);
         
         gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         gl4.glBufferData(GL_ARRAY_BUFFER, particleRingBuffer.getSize(), null, GL_DYNAMIC_DRAW);
@@ -56,7 +56,7 @@ public class DynamicStreamingGLBufferSubData extends DynamicStreamingSolution {
         
         ApplicationState.animator.setUpdateFPSFrames(2, System.out);
         
-        return gl4.glGetError() == GL_NO_ERROR;
+        return GLApi.getError(gl4) == GL_NO_ERROR;
     }
     
     @Override

@@ -28,7 +28,7 @@ public class DynamicStreamingProblem extends Problem {
     public static int particleCount = (particleCountX * particleCountY);
     public static int vertexCount = particleCount * vertsPerParticle;
     private int particleBufferSize = Vec2.SIZE * vertexCount;
-    public static final boolean useBuffer = false;
+    public static final boolean useBuffer = true;
 
     @Override
     public boolean init(GL4 gl4) {
