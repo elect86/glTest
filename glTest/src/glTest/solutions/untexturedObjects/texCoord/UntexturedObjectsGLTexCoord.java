@@ -49,6 +49,10 @@ public class UntexturedObjectsGLTexCoord extends UntexturedObjectsSolution {
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1),
             bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
 
+    public UntexturedObjectsGLTexCoord() {
+        updateFps = 26;
+    }
+
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
@@ -75,8 +79,6 @@ public class UntexturedObjectsGLTexCoord extends UntexturedObjectsSolution {
 
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
         gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.capacity(), indices, GL_STATIC_DRAW);
-
-        ApplicationState.animator.setUpdateFPSFrames(26, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

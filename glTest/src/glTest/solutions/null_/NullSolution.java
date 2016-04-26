@@ -6,7 +6,6 @@
 package glTest.solutions.null_;
 
 import com.jogamp.opengl.GL4;
-import glTest.framework.ApplicationState;
 import glTest.solutions.Solution;
 
 /**
@@ -14,6 +13,10 @@ import glTest.solutions.Solution;
  * @author GBarbieri
  */
 public class NullSolution extends Solution {
+
+    public NullSolution() {
+        updateFps = 10_000;
+    }
 
     @Override
     public boolean init(GL4 gl4) {

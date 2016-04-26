@@ -61,6 +61,10 @@ public class UntexturedObjectsGLMapPersistent extends UntexturedObjectsSolution 
     private RingBuffer ringBuffer;
     private ByteBuffer transformPtr;
 
+    public UntexturedObjectsGLMapPersistent() {
+        updateFps = 40;
+    }
+
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
@@ -120,8 +124,6 @@ public class UntexturedObjectsGLMapPersistent extends UntexturedObjectsSolution 
         int flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
         gl4.glBufferStorage(GL_SHADER_STORAGE_BUFFER, ringBuffer.getSize(), null, flags);
         transformPtr = gl4.glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, ringBuffer.getSize(), flags);
-
-        ApplicationState.animator.setUpdateFPSFrames(40, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

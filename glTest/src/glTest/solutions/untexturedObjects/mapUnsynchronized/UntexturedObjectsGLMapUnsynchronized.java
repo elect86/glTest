@@ -59,6 +59,10 @@ public class UntexturedObjectsGLMapUnsynchronized extends UntexturedObjectsSolut
             bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
     private RingBuffer ringBuffer;
 
+    public UntexturedObjectsGLMapUnsynchronized() {
+        updateFps = 1;
+    }
+
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
@@ -112,8 +116,6 @@ public class UntexturedObjectsGLMapUnsynchronized extends UntexturedObjectsSolut
         ringBuffer = new RingBuffer(GLApi.tripleBuffer, Mat4.SIZE * objectCount);
         gl4.glBufferData(GL_SHADER_STORAGE_BUFFER, ringBuffer.getSize(), null, GL_DYNAMIC_DRAW);
 
-        ApplicationState.animator.setUpdateFPSFrames(1, System.out);
-
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }
 
@@ -152,9 +154,9 @@ public class UntexturedObjectsGLMapUnsynchronized extends UntexturedObjectsSolut
 
         ringBuffer.wait(gl4);
 
-        gl4.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM0_, bufferName.get(Buffer.TRASFORM), 
+        gl4.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM0_, bufferName.get(Buffer.TRASFORM),
                 ringBuffer.getSectorOffset(), ringBuffer.getSectorSize());
-        
+
         int access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT;
         for (int i = 0; i < count; i++) {
 
@@ -173,12 +175,12 @@ public class UntexturedObjectsGLMapUnsynchronized extends UntexturedObjectsSolut
             transforms.position(i * Mat4.SIZE);
             transforms.limit(transforms.position() + Mat4.SIZE);
             dst.put(transforms);
-            
+
             gl4.glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
             gl4.glDrawElementsInstancedBaseInstance(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0, 1, i);
         }
-        
+
         ringBuffer.lockAndUpdate(gl4);
     }
 

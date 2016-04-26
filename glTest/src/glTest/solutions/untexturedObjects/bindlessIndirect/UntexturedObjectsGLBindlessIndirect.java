@@ -10,7 +10,6 @@ import com.jogamp.opengl.GL4;
 import static com.jogamp.opengl.GL4.*;
 import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.util.GLBuffers;
-import glTest.framework.ApplicationState;
 import glTest.framework.BufferUtils;
 import glTest.framework.DrawElementsIndirectCommand;
 import glTest.framework.GLApi;
@@ -52,6 +51,10 @@ public class UntexturedObjectsGLBindlessIndirect extends UntexturedObjectsSoluti
     private LongBuffer ibAddresses, vbAddresses;
     private long[] ibSizes, vbSizes;
     private ByteBuffer commands;
+
+    public UntexturedObjectsGLBindlessIndirect() {
+        updateFps = 25;
+    }
 
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
@@ -129,8 +132,6 @@ public class UntexturedObjectsGLBindlessIndirect extends UntexturedObjectsSoluti
 
         // turn off because of the warnings
         GLContext.getCurrent().enableGLDebugMessage(false);
-        
-        ApplicationState.animator.setUpdateFPSFrames(25, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

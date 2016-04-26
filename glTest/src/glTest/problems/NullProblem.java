@@ -21,10 +21,8 @@ public class NullProblem extends Problem {
 
         super.init(gl4);
 
-        clearColor.put(new float[]{0.2f, 0.0f, 0.0f, 1.0f}).rewind();
-        clearDepth.put(new float[]{1.0f}).rewind();
-
-        ApplicationState.animator.setUpdateFPSFrames(10_000, System.out);
+        clearColor.put(0, 0.2f).put(1, 0.0f).put(2, 0.0f).put(3, 1.0f);
+        clearDepth.put(0, 1.0f);
 
         return true;
     }

@@ -33,6 +33,10 @@ import java.nio.ByteBuffer;
  * @author elect
  */
 public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolution {
+
+    public DynamicStreamingGLMapUnsynchronized() {
+        updateFps = 5;
+    }
     
     @Override
     public boolean init(GL4 gl4) {
@@ -58,8 +62,6 @@ public class DynamicStreamingGLMapUnsynchronized extends DynamicStreamingSolutio
 
         gl4.glGenVertexArrays(1, vertexArrayName);
         gl4.glBindVertexArray(vertexArrayName.get(0));
-
-        ApplicationState.animator.setUpdateFPSFrames(5, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

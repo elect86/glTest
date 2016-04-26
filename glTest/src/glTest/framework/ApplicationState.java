@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import glTest.problems.Problem;
 import glTest.solutions.Solution;
 import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 
 /**
  *
@@ -48,11 +49,12 @@ public class ApplicationState implements GLEventListener, KeyListener {
     private Solution solution;
     public GLWindow glWindow;
     public static Animator animator;
-    public static boolean DEBUG = true;
-    private IntBuffer vertexArrayObject = GLBuffers.newDirectIntBuffer(1);
+    private final boolean DEBUG = true;
+    private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1), queryName = GLBuffers.newDirectIntBuffer(1);
+    private LongBuffer gpuTime = GLBuffers.newDirectLongBuffer(1);
     private final String rootTitle = "gltest";
-    private int offsetProblem = 0;
-    private int offsetSolution = 0;
+    private int offsetProblem = 0, offsetSolution = 0, frames = 0;
+    private long cpuStart, cpuTotal, gpuTotal, updateCountersStart, updateTick = 1_000;
 
     public void setup() {
 
@@ -85,7 +87,6 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         System.out.println("GL created successfully! Info follows.");
 
-//        glWindow.setExclusiveContextThread(new Thread());
         animator = new Animator();
         animator.setRunAsFastAsPossible(true);
         animator.setModeBits(false, AnimatorBase.MODE_EXPECT_AWT_RENDERING_THREAD);
@@ -93,7 +94,6 @@ public class ApplicationState implements GLEventListener, KeyListener {
         animator.setExclusiveContext(true);
 
         glWindow.setExclusiveContextThread(animator.getExclusiveContextThread());
-//        animator.setUpdateFPSFrames(30_000, System.out);
         animator.start();
     }
 
@@ -125,15 +125,22 @@ public class ApplicationState implements GLEventListener, KeyListener {
             gl4.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, null, true);
         }
 
+        gl4.glGetQueryiv(GL_TIME_ELAPSED, GL_QUERY_COUNTER_BITS, queryName);
+        System.out.println("GL_QUERY_COUNTER_BITS: " + queryName.get(0));
+
+        gl4.glGenQueries(1, queryName);
+
         // Now that we have something valid, create our VAO and bind it. Ugh! So lame that this is required.
-        gl4.glGenVertexArrays(1, vertexArrayObject);
-        gl4.glBindVertexArray(vertexArrayObject.get(0));
+        gl4.glGenVertexArrays(1, vertexArrayName);
+        gl4.glBindVertexArray(vertexArrayName.get(0));
 
         factory = new ProblemFactory();
         problems = factory.getProblems();
         assert (problems.size() > 0);
 
         setInitialProblemAndSolution(gl4, "NullProblem", "NullSolution");
+
+        updateCountersStart = System.currentTimeMillis();
     }
 
     private void setInitialProblemAndSolution(GL4 gl4, String probName, String solnName) {
@@ -176,11 +183,38 @@ public class ApplicationState implements GLEventListener, KeyListener {
             return;
         }
 
-        // This is the main entry point shared by all tests. 
-        problem.render(gl4);
+        gl4.glBeginQuery(GL_TIME_ELAPSED, queryName.get(0));
+        {
+            cpuStart = System.nanoTime();
+            {
+                // This is the main entry point shared by all tests. 
+                problem.render(gl4);
+                frames++;
+            }
+            cpuTotal += System.nanoTime() - cpuStart;
+        }
+        gl4.glEndQuery(GL_TIME_ELAPSED);
+        gl4.glGetQueryObjectui64v(queryName.get(0), GL_QUERY_RESULT, gpuTime);
+        gpuTotal += gpuTime.get(0);
 
         // Present the results.
-        // included in the animator
+//        if (frames == problem.getSolution().updateFps) {
+        if (System.currentTimeMillis() - updateCountersStart > updateTick) {
+//            System.out.println("cpuTotal: " + cpuTotal / 1_000_000 + ", gpuTotal: " + gpuTotal + ", frames: " + frames);
+            String cpu = String.format("%.3f", ((double) cpuTotal / 1_000_000 / frames)) + " ms";
+            String gpu = String.format("%.3f", ((double) gpuTotal / 1_000_000 / frames)) + " ms";
+            String fps = String.format("%,.2f", (1_000 / ((double) gpuTotal / 1_000_000 / frames)));
+//            String fps = String.format("%,.2f", frames / ((double) gpuTotal / 1_000_000));
+            System.out.println("CPU time: " + cpu + ", GPU time: " + gpu + ", theor. FPS: " + fps);
+            resetCounter();
+        }
+    }
+
+    private void resetCounter() {
+        frames = 0;
+        cpuTotal = 0;
+        gpuTotal = 0;
+        updateCountersStart = System.currentTimeMillis();
     }
 
     @Override
@@ -198,7 +232,7 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         // Must cleanup before we call base class.
         gl4.glBindVertexArray(0);
-        gl4.glDeleteVertexArrays(1, vertexArrayObject);
+        gl4.glDeleteVertexArrays(1, vertexArrayName);
 
         System.exit(0);
     }
@@ -282,6 +316,8 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
         problem.setSolution(gl4, solution);
         problem.setSolutionId(solutionId);
+
+        resetCounter();
     }
 
     private void shutdownSolution(GL4 gl4) {
@@ -316,7 +352,5 @@ public class ApplicationState implements GLEventListener, KeyListener {
         glWindow.setTitle(newTitle);
 
         System.gc();
-
-        animator.resetFPSCounter();
     }
 }

@@ -33,6 +33,10 @@ public class UntexturedObjectsGLBindless extends UntexturedObjectsSolution {
     private LongBuffer ibAddresses, vbAddresses;
     private long[] ibSizes, vbSizes;
 
+    public UntexturedObjectsGLBindless() {
+        updateFps = 5;
+    }
+
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
@@ -90,8 +94,6 @@ public class UntexturedObjectsGLBindless extends UntexturedObjectsSolution {
 
         gl4.glGenVertexArrays(1, vertexArrayName);
         gl4.glBindVertexArray(vertexArrayName.get(0));
-
-        ApplicationState.animator.setUpdateFPSFrames(5, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

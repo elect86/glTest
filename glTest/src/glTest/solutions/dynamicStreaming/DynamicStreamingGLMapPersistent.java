@@ -24,6 +24,10 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
     private RingBuffer particleRingBuffer;
     private ByteBuffer vertexDataPtr;
 
+    public DynamicStreamingGLMapPersistent() {
+        updateFps = 58;
+    }    
+    
     @Override
     public boolean init(GL4 gl4) {
 
@@ -56,8 +60,6 @@ public class DynamicStreamingGLMapPersistent extends DynamicStreamingSolution {
 
         gl4.glGenVertexArrays(1, vertexArrayName);
         gl4.glBindVertexArray(vertexArrayName.get(0));
-
-        ApplicationState.animator.setUpdateFPSFrames(58, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

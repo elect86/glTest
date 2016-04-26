@@ -42,6 +42,10 @@ public class UntexturedObjectsGLBufferRange extends UntexturedObjectsSolution {
         public static final int MAX = 3;
     }
 
+    public UntexturedObjectsGLBufferRange() {
+        updateFps = 11;
+    }
+
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1),
             bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
     private ByteBuffer storage;
@@ -89,11 +93,9 @@ public class UntexturedObjectsGLBufferRange extends UntexturedObjectsSolution {
 
         gl4.glGenVertexArrays(1, vertexArrayName);
         gl4.glBindVertexArray(vertexArrayName.get(0));
-        
+
         BufferUtils.destroyDirectBuffer(uniformBufferOffsetAlignment);
         BufferUtils.destroyDirectBuffer(maxUniformBlockSize);
-        
-        ApplicationState.animator.setUpdateFPSFrames(11, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }
@@ -171,7 +173,7 @@ public class UntexturedObjectsGLBufferRange extends UntexturedObjectsSolution {
         gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
 
         gl4.glDeleteBuffers(Buffer.MAX, bufferName);
-        
+
         gl4.glDeleteVertexArrays(1, vertexArrayName);
 
         gl4.glDeleteProgram(programName);
@@ -179,10 +181,10 @@ public class UntexturedObjectsGLBufferRange extends UntexturedObjectsSolution {
         BufferUtils.destroyDirectBuffer(bufferName);
         BufferUtils.destroyDirectBuffer(vertexArrayName);
         BufferUtils.destroyDirectBuffer(storage);
-        
+
         return true;
     }
-    
+
     @Override
     public String getName() {
         return "GLBufferRange";

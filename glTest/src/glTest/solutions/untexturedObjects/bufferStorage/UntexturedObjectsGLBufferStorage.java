@@ -67,6 +67,7 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
 
     public UntexturedObjectsGLBufferStorage(boolean useShaderDrawParameters) {
         this.useShaderDrawParameters = useShaderDrawParameters;
+        updateFps = useShaderDrawParameters ? 70 : 200;
     }
 
     @Override
@@ -141,8 +142,6 @@ public class UntexturedObjectsGLBufferStorage extends UntexturedObjectsSolution 
         gl4.glBindBuffer(GL_SHADER_STORAGE_BUFFER, bufferName.get(Buffer.TRASFORM));
         gl4.glBufferStorage(GL_SHADER_STORAGE_BUFFER, transformRingBuffer.getSize(), null, createFlags);
         transformPtr = gl4.glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, transformRingBuffer.getSize(), mapFlags);
-
-        ApplicationState.animator.setUpdateFPSFrames(useShaderDrawParameters ? 70 : 200, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

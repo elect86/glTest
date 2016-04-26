@@ -41,6 +41,10 @@ public class UntexturedObjectsGLDrawLoop extends UntexturedObjectsSolution {
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1),
             bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
 
+    public UntexturedObjectsGLDrawLoop() {
+        updateFps = 42;
+    }
+
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
@@ -86,8 +90,6 @@ public class UntexturedObjectsGLDrawLoop extends UntexturedObjectsSolution {
         gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.capacity(), indices, GL_STATIC_DRAW);
 
         gl4.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, Semantic.Storage.TRANSFORM, bufferName.get(Buffer.TRASFORM));
-
-        ApplicationState.animator.setUpdateFPSFrames(42, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }

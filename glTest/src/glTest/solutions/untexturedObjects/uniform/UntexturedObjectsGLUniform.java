@@ -38,6 +38,10 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX),
             vertexArrayName = GLBuffers.newDirectIntBuffer(1);
 
+    public UntexturedObjectsGLUniform() {
+        updateFps = 20;
+    }
+
     @Override
     public boolean init(GL4 gl4, ByteBuffer vertices, ByteBuffer indices, int objectCount) {
 
@@ -63,8 +67,6 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
 
         gl4.glGenVertexArrays(1, vertexArrayName);
         gl4.glBindVertexArray(vertexArrayName.get(0));
-
-        ApplicationState.animator.setUpdateFPSFrames(20, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }
@@ -111,7 +113,7 @@ public class UntexturedObjectsGLUniform extends UntexturedObjectsSolution {
         for (int i = 0; i < objectCount; i++) {
 
             for (int j = 0; j < Mat4.SIZE; j++) {
-                
+
             }
             transforms.position(i * Mat4.SIZE);
             gl4.glUniformMatrix4fv(Semantic.Uniform.TRANSFORM1, 1, false, transforms.asFloatBuffer());

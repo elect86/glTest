@@ -19,6 +19,7 @@ public abstract class Solution {
     protected int width = ApplicationState.RESOLUTION.x;
     protected int height = ApplicationState.RESOLUTION.y;
     protected Mat4 proj = glm.perspective_((float) Math.PI * 0.25f, (float) width / height, 0.1f, 10_000f);
+    public int updateFps = 1;
 
     public boolean init(GL4 gl4) {
         return true;

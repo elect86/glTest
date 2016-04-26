@@ -47,6 +47,7 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
 
     public UntexturedObjectsGLMultiDrawBuffer(boolean useShaderDrawParameters) {
         this.useShaderDrawParameters = useShaderDrawParameters;
+        updateFps = useShaderDrawParameters? 60 : 130;
     }
 
     @Override
@@ -111,8 +112,6 @@ public class UntexturedObjectsGLMultiDrawBuffer extends UntexturedObjectsSolutio
 
         // Set the command buffer size.
         commands = GLBuffers.newDirectByteBuffer(DrawElementsIndirectCommand.SIZE * objectCount);
-
-        ApplicationState.animator.setUpdateFPSFrames(useShaderDrawParameters? 60 : 130, System.out);
 
         return GLApi.getError(gl4) == GL_NO_ERROR;
     }
