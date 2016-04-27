@@ -30,6 +30,12 @@ Dynamic Streaming:
 		CPU time: 8 ms, GPU time: 6 ms, theor. FPS: 165
 	
 		CPU time: 16 ms, GPU time: 10,9 ms, theor. FPS: 91,3
+		
+	Direct3D11:
+	
+		D3D11UpdateSubresource -> CPU time: 407 ms, FPS: 2,06
+		
+		D3D11MapNoOverwrite -> CPU time: 14 ms, FPS: 66
 
 Untextured Objects:
 
@@ -103,6 +109,9 @@ Untextured Objects:
 	
 		CPU time: 36,9 ms, GPU time: 34,8 ms, theor. FPS: 28,7
 
+	Direct3D11:
+	
+		D3D11Naive -> CPU time: 20 ms, FPS: 49,5
 # glCalls
 
 Micro benchmark in order to evaluate the *relative* weights between different GL state changes
