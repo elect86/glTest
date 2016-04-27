@@ -16,7 +16,9 @@ Null Problem:
 Dynamic Streaming:
 
 * GLBufferSubData -> 2.1 fps
+
 	CPU time: 444 ms, GPU time: 455 ms, theor. FPS: 2,194
+	
 	CPU time: 148 ms, GPU time: 458 ms, theor. FPS: 2,18
 * GLMapUnsynchronized -> 9.0 fps
 	CPU time: 115 ms, GPU time: 114 ms, theor. FPS: 8.7
