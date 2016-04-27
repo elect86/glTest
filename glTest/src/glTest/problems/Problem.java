@@ -7,7 +7,7 @@ package glTest.problems;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import glTest.framework.BufferUtils;
+import common.BufferUtils;
 import glTest.solutions.Solution;
 import java.nio.FloatBuffer;
 

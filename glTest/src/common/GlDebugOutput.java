@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package glTest.framework;
+package common;
 
 import static com.jogamp.opengl.GL2ES2.GL_DEBUG_SEVERITY_LOW;
 import com.jogamp.opengl.GLDebugListener;

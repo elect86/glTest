@@ -1,4 +1,6 @@
-#version 450
+#version 330
+
+
 
 layout (location = 0) in vec3 Position;
 

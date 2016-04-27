@@ -10,7 +10,7 @@ import com.jogamp.opengl.GL4;
 import static com.jogamp.opengl.GL4.*;
 import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.util.GLBuffers;
-import glTest.framework.BufferUtils;
+import common.BufferUtils;
 import glTest.framework.DrawElementsIndirectCommand;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jogl.glsl;
+package callOverhead.gl4.jogl.glsl;
 
 import com.jogamp.opengl.GL3;
 

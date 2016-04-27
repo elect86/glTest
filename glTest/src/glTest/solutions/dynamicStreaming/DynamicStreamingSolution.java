@@ -7,7 +7,7 @@ package glTest.solutions.dynamicStreaming;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import glTest.framework.BufferUtils;
+import common.BufferUtils;
 import glTest.framework.RingBuffer;
 import glTest.problems.DynamicStreamingProblem;
 import glTest.solutions.Solution;

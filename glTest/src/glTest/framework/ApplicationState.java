@@ -5,6 +5,8 @@
  */
 package glTest.framework;
 
+import common.TimeHack6435126;
+import common.GlDebugOutput;
 import com.jogamp.newt.Display;
 import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
@@ -38,6 +40,8 @@ public class ApplicationState implements GLEventListener, KeyListener {
 
     public static void main(String[] args) throws InterruptedException {
 
+        TimeHack6435126.enableHighResolutionTimer();
+        
         ApplicationState app = new ApplicationState();
         app.setup();
     }
@@ -201,8 +205,8 @@ public class ApplicationState implements GLEventListener, KeyListener {
 //        if (frames == problem.getSolution().updateFps) {
         if (System.currentTimeMillis() - updateCountersStart > updateTick) {
 //            System.out.println("cpuTotal: " + cpuTotal / 1_000_000 + ", gpuTotal: " + gpuTotal + ", frames: " + frames);
-            String cpu = String.format("%.3f", ((double) cpuTotal / 1_000_000 / frames)) + " ms";
-            String gpu = String.format("%.3f", ((double) gpuTotal / 1_000_000 / frames)) + " ms";
+            String cpu = String.format("%,.3f", ((double) cpuTotal / 1_000_000 / frames)) + " ms";
+            String gpu = String.format("%,.3f", ((double) gpuTotal / 1_000_000 / frames)) + " ms";
             String fps = String.format("%,.2f", (1_000 / ((double) gpuTotal / 1_000_000 / frames)));
 //            String fps = String.format("%,.2f", frames / ((double) gpuTotal / 1_000_000));
             System.out.println("CPU time: " + cpu + ", GPU time: " + gpu + ", theor. FPS: " + fps);

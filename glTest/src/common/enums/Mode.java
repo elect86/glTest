@@ -9,14 +9,14 @@ package common.enums;
  *
  * @author gbarbieri
  */
-public enum StateChange {
+public enum Mode {
 
-    RenderTarget,
-    Program,
-    Rop,
-    TextureBinding,
-    VertexFormat,
-    UboBindings,
-    VertexBindings,
-    UniformUpdates
+    FRAMEBUFFER,
+    PROGRAM,
+    ROP,
+    TEXTURE,
+    VERTEX_FORMAT,
+    UBO,
+    VERTEX_BINDING,
+    UNIFORM
 }

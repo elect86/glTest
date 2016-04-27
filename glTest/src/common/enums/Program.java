@@ -11,11 +11,11 @@ package common.enums;
  */
 public enum Program {
 
-    one,
-    two,
-    texture,
-    vertexFormat,
-    ubo,
-    uniform,
-    size
+    A,
+    B,
+    TEXTURE,
+    VERTEX_FORMAT,
+    UBO,
+    UNIFORM,
+    MAX
 }

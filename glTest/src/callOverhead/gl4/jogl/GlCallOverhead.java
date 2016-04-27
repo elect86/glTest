@@ -3,85 +3,103 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jogl;
+package callOverhead.gl4.jogl;
 
+import com.jogamp.newt.Display;
+import com.jogamp.newt.NewtFactory;
+import com.jogamp.newt.Screen;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
+import com.jogamp.opengl.util.AnimatorBase;
 import com.jogamp.opengl.util.GLBuffers;
+import common.GlDebugOutput;
 import common.enums.Objects;
 import common.enums.Program;
-import common.enums.StateChange;
-import static common.enums.StateChange.RenderTarget;
-import static common.enums.StateChange.TextureBinding;
-import static common.enums.StateChange.UboBindings;
-import static common.enums.StateChange.UniformUpdates;
-import static common.enums.StateChange.VertexBindings;
-import static common.enums.StateChange.VertexFormat;
+import common.enums.Mode;
 import common.enums.Texture;
 import glsl.GLSLProgramObject;
 import java.nio.FloatBuffer;
 import jglm.Mat4;
-import jogl.glsl.ProgramBase;
-import jogl.glsl.ProgramTexture;
-import jogl.glsl.ProgramUbo;
-import jogl.glsl.ProgramUniform;
+import callOverhead.gl4.jogl.glsl.ProgramBase;
+import callOverhead.gl4.jogl.glsl.ProgramTexture;
+import callOverhead.gl4.jogl.glsl.ProgramUbo;
+import callOverhead.gl4.jogl.glsl.ProgramUniform;
+import static common.enums.Mode.TEXTURE;
+import static common.enums.Mode.VERTEX_FORMAT;
+import static common.enums.Mode.UBO;
+import static common.enums.Mode.VERTEX_BINDING;
+import static common.enums.Mode.UNIFORM;
+import static common.enums.Mode.FRAMEBUFFER;
 
 /**
  *
  * @author elect
  */
-public class GlCallsOverhead implements GLEventListener, KeyListener {
+public class GlCallOverhead implements GLEventListener, KeyListener {
+
+    private final String SHADERS_ROOT = "src/libTest/shaders";
+    private final String SHADERS_SOURCE = "standard";
 
     private static Animator animator;
+    private static GLWindow glWindow;
+    private static final boolean DEBUG = true;
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
 
+        Display display = NewtFactory.createDisplay(null);
+        Screen screen = NewtFactory.createScreen(display, 0);
         GLProfile glProfile = GLProfile.get(GLProfile.GL4);
-        GLCapabilities caps = new GLCapabilities(glProfile);
+        GLCapabilities glCapabilities = new GLCapabilities(glProfile);
+        glWindow = GLWindow.create(screen, glCapabilities);
 
-        caps.setBackgroundOpaque(false);
-        GLWindow glWindow = GLWindow.create(caps);
-
-        glWindow.setTitle("Micro gl calls overhead benchmark");
         glWindow.setSize(1024, 768);
+        glWindow.setPosition(50, 50);
         glWindow.setUndecorated(false);
+        glWindow.setAlwaysOnTop(false);
+        glWindow.setFullscreen(false);
         glWindow.setPointerVisible(true);
+        glWindow.confinePointer(false);
+        glWindow.setTitle("JOGL - GL Call Overhead");
+        if (DEBUG) {
+            glWindow.setContextCreationFlags(GLContext.CTX_OPTION_DEBUG);
+        }
         glWindow.setVisible(true);
+        if (DEBUG) {
+            glWindow.getContext().addGLDebugListener(new GlDebugOutput());
+        }
 
-        GlCallsOverhead glCallsOverhead = new GlCallsOverhead(glWindow);
+        GlCallOverhead glCallsOverhead = new GlCallOverhead();
         glWindow.addGLEventListener(glCallsOverhead);
         glWindow.addKeyListener(glCallsOverhead);
+
         animator = new Animator();
-        animator.add(glWindow);
         animator.setRunAsFastAsPossible(true);
+        animator.setModeBits(false, AnimatorBase.MODE_EXPECT_AWT_RENDERING_THREAD);
+        animator.add(glWindow);
         animator.setExclusiveContext(true);
-        animator.setUpdateFPSFrames(10, System.out);
+
+        glWindow.setExclusiveContextThread(animator.getExclusiveContextThread());
         animator.start();
     }
 
-    private GLSLProgramObject[] programs;
     private int[] fbos;
     private int[] textures;
-    private final GLWindow glWindow;
     private int repeat;
     private int[] objects;
-    private StateChange stateChange;
+    private Mode stateChange;
     private boolean update;
     private FloatBuffer modelToClip;
-
-    public GlCallsOverhead(GLWindow glWindow) {
-        this.glWindow = glWindow;
-    }
 
     @Override
     public void init(GLAutoDrawable glad) {
@@ -102,7 +120,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
         initUbos(gl4);
 
-        stateChange = StateChange.RenderTarget;
+        stateChange = Mode.FRAMEBUFFER;
 
         update = true;
 
@@ -114,11 +132,9 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
     private void initPrograms(GL4 gl4) {
 
-        String shaderFilepath = "/common/shaders/";
-
         modelToClip = GLBuffers.newDirectFloatBuffer(new Mat4(1f).toFloatArray());
 
-        programs = new GLSLProgramObject[Program.size.ordinal()];
+        programs = new GLSLProgramObject[Program.MAX.ordinal()];
         for (int i = 0; i < 2; i++) {
             programs[i] = new ProgramBase(gl4, shaderFilepath, "VS.glsl", "FS.glsl");
             gl4.glUseProgram(programs[i].getProgramId());
@@ -128,29 +144,29 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
             gl4.glUseProgram(0);
         }
 
-        programs[Program.texture.ordinal()] = new ProgramTexture(gl4, shaderFilepath, "VS.glsl", "FStexture.glsl");
-        gl4.glUseProgram(programs[Program.texture.ordinal()].getProgramId());
+        programs[Program.TEXTURE.ordinal()] = new ProgramTexture(gl4, shaderFilepath, "VS.glsl", "FStexture.glsl");
+        gl4.glUseProgram(programs[Program.TEXTURE.ordinal()].getProgramId());
         {
-            gl4.glUniformMatrix4fv(((ProgramTexture) programs[Program.texture.ordinal()]).getModelToClipUL(), 1, false, 
+            gl4.glUniformMatrix4fv(((ProgramTexture) programs[Program.TEXTURE.ordinal()]).getModelToClipUL(), 1, false,
                     modelToClip);
         }
         gl4.glUseProgram(0);
 
-        programs[Program.vertexFormat.ordinal()] = new ProgramBase(gl4, shaderFilepath,
+        programs[Program.VERTEX_FORMAT.ordinal()] = new ProgramBase(gl4, shaderFilepath,
                 "VSvertexFormat.glsl", "FS.glsl");
-        gl4.glUseProgram(programs[Program.vertexFormat.ordinal()].getProgramId());
+        gl4.glUseProgram(programs[Program.VERTEX_FORMAT.ordinal()].getProgramId());
         {
-            gl4.glUniformMatrix4fv(((ProgramBase) programs[Program.vertexFormat.ordinal()]).getModelToClipUL(),
+            gl4.glUniformMatrix4fv(((ProgramBase) programs[Program.VERTEX_FORMAT.ordinal()]).getModelToClipUL(),
                     1, false, modelToClip);
         }
         gl4.glUseProgram(0);
 
-        programs[Program.ubo.ordinal()] = new ProgramUbo(gl4, shaderFilepath, "VSubo.glsl", "FS.glsl");
+        programs[Program.UBO.ordinal()] = new ProgramUbo(gl4, shaderFilepath, "VSubo.glsl", "FS.glsl");
 
-        programs[Program.uniform.ordinal()] = new ProgramUniform(gl4, shaderFilepath, "VSuniform.glsl", "FS.glsl");
-        gl4.glUseProgram(programs[Program.uniform.ordinal()].getProgramId());
+        programs[Program.UNIFORM.ordinal()] = new ProgramUniform(gl4, shaderFilepath, "VSuniform.glsl", "FS.glsl");
+        gl4.glUseProgram(programs[Program.UNIFORM.ordinal()].getProgramId());
         {
-            gl4.glUniformMatrix4fv(((ProgramUniform) programs[Program.uniform.ordinal()]).getModelToClipUL(),
+            gl4.glUniformMatrix4fv(((ProgramUniform) programs[Program.UNIFORM.ordinal()]).getModelToClipUL(),
                     1, false, modelToClip);
         }
         gl4.glUseProgram(0);
@@ -189,10 +205,10 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
     private void initTargets(GL4 gl4) {
 
-        fbos = new int[Program.size.ordinal()];
-        gl4.glGenFramebuffers(Program.size.ordinal(), fbos, 0);
+        fbos = new int[Program.MAX.ordinal()];
+        gl4.glGenFramebuffers(Program.MAX.ordinal(), fbos, 0);
 
-        for (int framebuffer = 0; framebuffer < Program.size.ordinal(); framebuffer++) {
+        for (int framebuffer = 0; framebuffer < Program.MAX.ordinal(); framebuffer++) {
 
             gl4.glBindTexture(GL4.GL_TEXTURE_RECTANGLE, textures[Texture.color.ordinal()]);
 
@@ -287,7 +303,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
         switch (stateChange) {
 
-            case RenderTarget:
+            case FRAMEBUFFER:
 
                 for (int i = 0; i < repeat; i++) {
                     gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, fbos[i % 2]);
@@ -296,7 +312,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
                 }
                 break;
 
-            case Program:
+            case PROGRAM:
 
                 for (int i = 0; i < repeat; i++) {
                     gl4.glUseProgram(programs[i % 2].getProgramId());
@@ -305,7 +321,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
                 }
                 break;
 
-            case TextureBinding:
+            case TEXTURE:
 
                 for (int i = 0; i < repeat; i++) {
                     gl4.glActiveTexture(GL4.GL_TEXTURE0 + i % 2);
@@ -315,7 +331,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
                 }
                 break;
 
-            case VertexFormat:
+            case VERTEX_FORMAT:
 
                 for (int i = 0; i < repeat; i++) {
                     gl4.glEnableVertexAttribArray(i % 2);
@@ -325,7 +341,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
                 }
                 break;
 
-            case UboBindings:
+            case UBO:
 
                 for (int i = 0; i < repeat; i++) {
                     gl4.glBindBuffer(GL4.GL_UNIFORM_BUFFER, objects[Objects.ubo0.ordinal() + i % 2]);
@@ -339,7 +355,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
                 }
                 break;
 
-            case VertexBindings:
+            case VERTEX_BINDING:
 
                 for (int i = 0; i < repeat; i++) {
                     gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, objects[Objects.vbo.ordinal()]);
@@ -351,11 +367,11 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
                 }
                 break;
 
-            case UniformUpdates:
+            case UNIFORM:
 
                 for (int i = 0; i < repeat; i++) {
 
-                    gl4.glUniform1i(((ProgramUniform) programs[Program.uniform.ordinal()]).getuUL(), 1);
+                    gl4.glUniform1i(((ProgramUniform) programs[Program.UNIFORM.ordinal()]).getuUL(), 1);
                     gl4.glDrawArrays(GL4.GL_POINTS, 0, 1);
                 }
                 break;
@@ -367,15 +383,15 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
         switch (stateChange) {
 
-            case RenderTarget:
+            case FRAMEBUFFER:
 
                 gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, objects[Objects.vbo.ordinal()]);
                 gl4.glBindVertexArray(objects[Objects.vao.ordinal()]);
-                programs[Program.one.ordinal()].bind(gl4);
+                programs[Program.A.ordinal()].bind(gl4);
                 repeat = 10_000;
                 break;
 
-            case Program:
+            case PROGRAM:
 
                 gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, objects[Objects.vbo.ordinal()]);
                 gl4.glBindVertexArray(objects[Objects.vao.ordinal()]);
@@ -383,42 +399,42 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
                 repeat = 100_000;
                 break;
 
-            case TextureBinding:
+            case TEXTURE:
                 gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, objects[Objects.vbo.ordinal()]);
                 gl4.glBindVertexArray(objects[Objects.vao.ordinal()]);
                 gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, fbos[0]);
-                programs[Program.texture.ordinal()].bind(gl4);
+                programs[Program.TEXTURE.ordinal()].bind(gl4);
                 repeat = 1_000_000;
                 break;
 
-            case VertexFormat:
+            case VERTEX_FORMAT:
                 gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, objects[Objects.vbo.ordinal()]);
                 gl4.glBindVertexArray(objects[Objects.vao.ordinal()]);
                 gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, fbos[0]);
-                programs[Program.vertexFormat.ordinal()].bind(gl4);
+                programs[Program.VERTEX_FORMAT.ordinal()].bind(gl4);
                 repeat = 1_000_000;
                 break;
 
-            case UboBindings:
+            case UBO:
                 gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, objects[Objects.vbo.ordinal()]);
                 gl4.glBindVertexArray(objects[Objects.vao.ordinal()]);
                 gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, fbos[0]);
-                programs[Program.ubo.ordinal()].bind(gl4);
+                programs[Program.UBO.ordinal()].bind(gl4);
                 repeat = 1_000_000;
                 break;
 
-            case VertexBindings:
+            case VERTEX_BINDING:
                 gl4.glBindVertexArray(objects[Objects.vao.ordinal()]);
                 gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, fbos[0]);
-                programs[Program.one.ordinal()].bind(gl4);
+                programs[Program.A.ordinal()].bind(gl4);
                 repeat = 1_000_000;
                 break;
 
-            case UniformUpdates:
+            case UNIFORM:
                 gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, objects[Objects.vbo.ordinal()]);
                 gl4.glBindVertexArray(objects[Objects.vao.ordinal()]);
                 gl4.glBindFramebuffer(GL4.GL_FRAMEBUFFER, fbos[0]);
-                programs[Program.uniform.ordinal()].bind(gl4);
+                programs[Program.UNIFORM.ordinal()].bind(gl4);
                 repeat = 1_000_000;
                 break;
         }
@@ -440,7 +456,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
             case KeyEvent.VK_1:
                 printResult();
-                stateChange = StateChange.RenderTarget;
+                stateChange = Mode.FRAMEBUFFER;
                 printStateChange();
                 animator.resetFPSCounter();
                 update = true;
@@ -448,7 +464,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
             case KeyEvent.VK_2:
                 printResult();
-                stateChange = StateChange.Program;
+                stateChange = Mode.PROGRAM;
                 printStateChange();
                 animator.resetFPSCounter();
                 update = true;
@@ -456,7 +472,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
             case KeyEvent.VK_3:
                 printResult();
-                stateChange = StateChange.TextureBinding;
+                stateChange = Mode.TEXTURE;
                 printStateChange();
                 animator.resetFPSCounter();
                 update = true;
@@ -464,7 +480,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
             case KeyEvent.VK_4:
                 printResult();
-                stateChange = StateChange.VertexFormat;
+                stateChange = Mode.VERTEX_FORMAT;
                 printStateChange();
                 animator.resetFPSCounter();
                 update = true;
@@ -472,7 +488,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
             case KeyEvent.VK_5:
                 printResult();
-                stateChange = StateChange.UboBindings;
+                stateChange = Mode.UBO;
                 printStateChange();
                 animator.resetFPSCounter();
                 update = true;
@@ -480,7 +496,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
             case KeyEvent.VK_6:
                 printResult();
-                stateChange = StateChange.VertexBindings;
+                stateChange = Mode.VERTEX_BINDING;
                 printStateChange();
                 animator.resetFPSCounter();
                 update = true;
@@ -488,7 +504,7 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
             case KeyEvent.VK_7:
                 printResult();
-                stateChange = StateChange.UniformUpdates;
+                stateChange = Mode.UNIFORM;
                 printStateChange();
                 animator.resetFPSCounter();
                 update = true;
@@ -506,25 +522,25 @@ public class GlCallsOverhead implements GLEventListener, KeyListener {
 
     private void printStateChange() {
         switch (stateChange) {
-            case RenderTarget:
+            case FRAMEBUFFER:
                 System.out.println("State change: Render Target, factor 10k");
                 break;
-            case Program:
+            case PROGRAM:
                 System.out.println("State change: Program, factor 100k");
                 break;
-            case TextureBinding:
+            case TEXTURE:
                 System.out.println("State change: Texture Bindings, factor 1M");
                 break;
-            case VertexFormat:
+            case VERTEX_FORMAT:
                 System.out.println("State change: Vertex Format, factor 1M");
                 break;
-            case UboBindings:
+            case UBO:
                 System.out.println("State change: UBO Bindings, factor 1M");
                 break;
-            case VertexBindings:
+            case VERTEX_BINDING:
                 System.out.println("State change: Vertex Bindings, factor 1M");
                 break;
-            case UniformUpdates:
+            case UNIFORM:
                 System.out.println("State change: Uniform Updates, factor 1M");
                 break;
         }

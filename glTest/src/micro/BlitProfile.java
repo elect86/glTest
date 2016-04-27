@@ -18,7 +18,7 @@ import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLBuffers;
-import glTest.framework.BufferUtils;
+import common.BufferUtils;
 import java.nio.IntBuffer;
 
 /**

@@ -27,7 +27,7 @@ import static com.jogamp.opengl.GL4.GL_MAP_COHERENT_BIT;
 import static com.jogamp.opengl.GL4.GL_MAP_PERSISTENT_BIT;
 import com.jogamp.opengl.util.GLBuffers;
 import glTest.framework.ApplicationState;
-import glTest.framework.BufferUtils;
+import common.BufferUtils;
 import glTest.framework.GLApi;
 import glTest.framework.GLUtilities;
 import glTest.framework.RingBuffer;

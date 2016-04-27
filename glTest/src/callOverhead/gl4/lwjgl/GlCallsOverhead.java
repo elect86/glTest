@@ -1,12 +1,8 @@
-package lwjgl;
+package callOverhead.gl4.lwjgl;
 
-import com.jogamp.opengl.GL2ES3;
-import com.jogamp.opengl.GL2GL3;
-import com.jogamp.opengl.GLContext;
-import com.jogamp.opengl.util.GLBuffers;
 import common.enums.Objects;
 import common.enums.Program;
-import common.enums.StateChange;
+import common.enums.Mode;
 import common.enums.Texture;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
@@ -16,7 +12,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import jglm.Mat4;
 import jglm.Vec2i;
-import lwjgl.glsl.ProgramBase;
+import callOverhead.gl4.lwjgl.glsl.ProgramBase;
 import org.lwjgl.BufferUtils;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -33,7 +29,7 @@ public class GlCallsOverhead {
     private long window;
     private Vec2i windowSize;
     
-    private StateChange stateChange;
+    private Mode stateChange;
     private FloatBuffer modelToClip;
     private ProgramBase[] programs;
     private IntBuffer fbos;
@@ -125,7 +121,7 @@ public class GlCallsOverhead {
         modelToClip.put(new Mat4(1f).toFloatArray());
         modelToClip.flip();
         
-        programs = new ProgramBase[Program.size.ordinal()];
+        programs = new ProgramBase[Program.MAX.ordinal()];
         for (int i = 0; i < 2; i++) {
             
             programs[i] = new ProgramBase(shaderFilepath, "VS.glsl", "FS.glsl");
@@ -180,18 +176,18 @@ public class GlCallsOverhead {
         
         for (int t = 0; t < 2; t++) {
             
-            glBindTexture(GL2GL3.GL_TEXTURE_RECTANGLE, textures.get(t));
+            glBindTexture(GL_TEXTURE_RECTANGLE, textures.get(t));
             {
-                glTexImage2D(GL2GL3.GL_TEXTURE_RECTANGLE, 0, GL_RGBA, windowSize.x, windowSize.y,
+                glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, windowSize.x, windowSize.y,
                         0, GL_RGBA, GL_FLOAT, colorBuffer);
                 
-                glTexParameteri(GL2GL3.GL_TEXTURE_RECTANGLE, GL12.GL_TEXTURE_BASE_LEVEL, 0);
-                glTexParameteri(GL2GL3.GL_TEXTURE_RECTANGLE, GL12.GL_TEXTURE_MAX_LEVEL, 0);
+                glTexParameteri(GL_TEXTURE_RECTANGLE, GL12.GL_TEXTURE_BASE_LEVEL, 0);
+                glTexParameteri(GL_TEXTURE_RECTANGLE, GL12.GL_TEXTURE_MAX_LEVEL, 0);
                 
-                glTexParameteri(GL2GL3.GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL2GL3.GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL2GL3.GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL2GL3.GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             }
             glBindTexture(GL2GL3.GL_TEXTURE_RECTANGLE, 0);
         }
@@ -199,11 +195,11 @@ public class GlCallsOverhead {
     
     private void initTargets() {
         
-        ByteBuffer byteBuffer = BufferUtils.createByteBuffer(Program.size.ordinal() * Integer.BYTES);
-        GL30.glGenFramebuffers(Program.size.ordinal(), byteBuffer);
+        ByteBuffer byteBuffer = BufferUtils.createByteBuffer(Program.MAX.ordinal() * Integer.BYTES);
+        GL30.glGenFramebuffers(Program.MAX.ordinal(), byteBuffer);
         fbos = byteBuffer.asIntBuffer();
         
-        for (int framebuffer = 0; framebuffer < Program.size.ordinal(); framebuffer++) {
+        for (int framebuffer = 0; framebuffer < Program.MAX.ordinal(); framebuffer++) {
             
             glBindTexture(GL2GL3.GL_TEXTURE_RECTANGLE, textures.get(Texture.color.ordinal()));
             
@@ -270,7 +266,7 @@ public class GlCallsOverhead {
 
         // Set the clear color
 //        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
-        stateChange = StateChange.RenderTarget;
+        stateChange = Mode.FRAMEBUFFER;
         repeat = 10_000;
         
         fpsSout = 10;
