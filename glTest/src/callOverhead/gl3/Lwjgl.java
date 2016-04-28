@@ -15,7 +15,6 @@ import java.nio.IntBuffer;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
-
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -139,8 +138,10 @@ public class Lwjgl {
 
         for (int i = Resource.Program.A; i < Resource.Program.MAX; i++) {
 
-            int vs = loadShader(Resource.SHADERS_ROOT + Resource.VERT_SHADERS_SOURCE[i] + ".vert", GL_VERTEX_SHADER);
-            int fs = loadShader(Resource.SHADERS_ROOT + Resource.FRAG_SHADERS_SOURCE[i] + ".frag", GL_FRAGMENT_SHADER);
+            int vs = loadShader(Resource.SHADERS_ROOT + "/" + Resource.VERT_SHADERS_SOURCE[i] + ".vert", 
+                    GL_VERTEX_SHADER);
+            int fs = loadShader(Resource.SHADERS_ROOT + "/" + Resource.FRAG_SHADERS_SOURCE[i] + ".frag", 
+                    GL_FRAGMENT_SHADER);
 
             programName[i] = GL20.glCreateProgram();
 
@@ -247,7 +248,6 @@ public class Lwjgl {
         FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(2);
         vertexBuffer.put(0, 0).put(0, 0);
         ByteBuffer transformBuffer = BufferUtils.createByteBuffer(Mat4.SIZE);
-        ByteBuffer vec4Buffer = BufferUtils.createByteBuffer(Vec4.SIZE);
 
         GL15.glGenBuffers(bufferName);
 
@@ -257,7 +257,7 @@ public class Lwjgl {
         for (int i = Resource.Buffer.A; i <= Resource.Buffer.B; i++) {
 
             GL15.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Resource.Buffer.A + i));
-            GL15.glBufferData(GL_UNIFORM_BUFFER, vec4Buffer, GL_DYNAMIC_DRAW);
+            GL15.glBufferData(GL_UNIFORM_BUFFER, Vec4.SIZE, GL_DYNAMIC_DRAW);
         }
 
         new Mat4(1).toDbb(transformBuffer);
@@ -266,7 +266,6 @@ public class Lwjgl {
 
         common.BufferUtils.destroyDirectBuffer(vertexBuffer);
         common.BufferUtils.destroyDirectBuffer(transformBuffer);
-        common.BufferUtils.destroyDirectBuffer(vec4Buffer);
     }
 
     private void initVertexArray() {
