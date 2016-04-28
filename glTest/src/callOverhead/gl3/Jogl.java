@@ -66,12 +66,6 @@ import java.nio.ByteBuffer;
  */
 public class Jogl implements GLEventListener, KeyListener {
 
-    private final String SHADERS_ROOT = "src/libTest/gl3/shaders";
-    private final String[] VERT_SHADERS_SOURCE
-            = new String[]{"standard", "standard", "standard", "uniform-buffer", "uniform"};
-    private final String[] FRAG_SHADERS_SOURCE
-            = new String[]{"standard", "standard", "texture", "standard", "standard"};
-
     private static Animator animator;
     private static GLWindow glWindow;
     private static final boolean DEBUG = true;
@@ -118,7 +112,7 @@ public class Jogl implements GLEventListener, KeyListener {
         animator.start();
     }
 
-    private int[] programName;
+    private int[] programName = new int[Resource.Program.MAX];
     private IntBuffer framebufferName = GLBuffers.newDirectIntBuffer(Resource.Framebuffer.MAX),
             bufferName = GLBuffers.newDirectIntBuffer(Resource.Buffer.MAX),
             vertexArrayName = GLBuffers.newDirectIntBuffer(1),
@@ -138,25 +132,24 @@ public class Jogl implements GLEventListener, KeyListener {
         initBuffer(gl3);
         initVertexArray(gl3);
 
-        printHelp();
-        printStateChange();
-
+        
         mode = Semantic.Mode.FRAMEBUFFER;
 //        update(gl3);
+
+        Resource.printHelp();
+        Resource.printStateChange(mode);
     }
 
     private void initPrograms(GL3 gl3) {
-
-        programName = new int[Resource.Program.MAX];
 
         for (int i = Resource.Program.A; i < Resource.Program.MAX; i++) {
 
             ShaderProgram shaderProgram = new ShaderProgram();
 
-            ShaderCode vertShaderCode = ShaderCode.create(gl3, GL_VERTEX_SHADER, this.getClass(), SHADERS_ROOT, null,
-                    VERT_SHADERS_SOURCE[i], "vert", null, true);
-            ShaderCode fragShaderCode = ShaderCode.create(gl3, GL_FRAGMENT_SHADER, this.getClass(), SHADERS_ROOT, null,
-                    FRAG_SHADERS_SOURCE[i], "frag", null, true);
+            ShaderCode vertShaderCode = ShaderCode.create(gl3, GL_VERTEX_SHADER, this.getClass(), Resource.SHADERS_ROOT,
+                    null, Resource.VERT_SHADERS_SOURCE[i], "vert", null, true);
+            ShaderCode fragShaderCode = ShaderCode.create(gl3, GL_FRAGMENT_SHADER, this.getClass(), Resource.SHADERS_ROOT,
+                    null, Resource.FRAG_SHADERS_SOURCE[i], "frag", null, true);
 
             shaderProgram.add(vertShaderCode);
             shaderProgram.add(fragShaderCode);
@@ -179,7 +172,6 @@ public class Jogl implements GLEventListener, KeyListener {
                 Semantic.Uniform.TRANSFORM0);
 
         uniformLocation = gl3.glGetUniformLocation(programName[Resource.Program.UNIFORM], "z");
-        System.out.println("");
     }
 
     private void initTextures(GL3 gl3) {
@@ -197,8 +189,8 @@ public class Jogl implements GLEventListener, KeyListener {
 
             gl3.glBindTexture(GL_TEXTURE_RECTANGLE, textureName.get(i));
 
-            gl3.glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, glWindow.getWidth(), glWindow.getHeight(),
-                    0, GL_RGBA, GL_FLOAT, colorBuffer);
+            gl3.glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, glWindow.getWidth(), glWindow.getHeight(), 0, GL_RGBA,
+                    GL_FLOAT, colorBuffer);
 
             gl3.glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_BASE_LEVEL, 0);
             gl3.glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAX_LEVEL, 0);
@@ -209,8 +201,7 @@ public class Jogl implements GLEventListener, KeyListener {
             gl3.glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
         gl3.glBindTexture(GL_TEXTURE_2D, textureName.get(Resource.Texture.COLOR));
-        gl3.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glWindow.getWidth(), glWindow.getHeight(), 0, GL_RGBA,
-                GL_FLOAT, null);
+        gl3.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glWindow.getWidth(), glWindow.getHeight(), 0, GL_RGBA, GL_FLOAT, null);
 
         gl3.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         gl3.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -475,51 +466,15 @@ public class Jogl implements GLEventListener, KeyListener {
                 break;
 
             default:
-                printHelp();
+                Resource.printHelp();
                 break;
         }
 
-        printStateChange();
+        Resource.printStateChange(mode);
 
 //        update(glWindow.getContext().getGL().getGL3());
         update = true;
 
 //        glWindow.getContext().release();
-    }
-
-    private void printStateChange() {
-        switch (mode) {
-            case Semantic.Mode.FRAMEBUFFER:
-                System.out.println("State change: Framebuffer");
-                break;
-            case Semantic.Mode.PROGRAM:
-                System.out.println("State change: Program");
-                break;
-            case Semantic.Mode.TEXTURE:
-                System.out.println("State change: Texture Bindings");
-                break;
-            case Semantic.Mode.VERTEX_FORMAT:
-                System.out.println("State change: Vertex Format");
-                break;
-            case Semantic.Mode.UBO:
-                System.out.println("State change: UBO Bindings");
-                break;
-            case Semantic.Mode.VERTEX_BINDING:
-                System.out.println("State change: Vertex Bindings");
-                break;
-            case Semantic.Mode.UNIFORM:
-                System.out.println("State change: Uniform Updates");
-                break;
-        }
-    }
-
-    private void printHelp() {
-        System.out.println("1 - Render Target");
-        System.out.println("2 - Program");
-        System.out.println("3 - Texture Bindings");
-        System.out.println("4 - Vertex Format");
-        System.out.println("5 - UBO Bindings");
-        System.out.println("6 - Vertex Bindings");
-        System.out.println("7 - Uniform Updates");
     }
 }
