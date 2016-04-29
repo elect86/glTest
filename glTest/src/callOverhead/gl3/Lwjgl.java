@@ -116,6 +116,7 @@ public class Lwjgl {
 
         // Make the OpenGL context current
         glfwMakeContextCurrent(window);
+        GL.createCapabilities();
         // Disable v-sync
         glfwSwapInterval(0);
 
