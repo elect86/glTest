@@ -2,6 +2,7 @@ package callOverhead.gl3;
 
 import callOverhead.Resource;
 import callOverhead.Semantic;
+import common.TimeHack6435126;
 import glm.mat._4.Mat4;
 import glm.vec._2.Vec2;
 import glm.vec._2.i.Vec2i;
@@ -62,6 +63,8 @@ public class Lwjgl {
         System.out.println("Lwjgl " + Version.getVersion() + "!");
 
         try {
+            TimeHack6435126.enableHighResolutionTimer();
+
             init();
             loop();
 
@@ -139,9 +142,9 @@ public class Lwjgl {
 
         for (int i = Resource.Program.A; i < Resource.Program.MAX; i++) {
 
-            int vs = loadShader(Resource.SHADERS_ROOT + "/" + Resource.VERT_SHADERS_SOURCE[i] + ".vert", 
+            int vs = loadShader(Resource.SHADERS_ROOT + "/" + Resource.VERT_SHADERS_SOURCE[i] + ".vert",
                     GL_VERTEX_SHADER);
-            int fs = loadShader(Resource.SHADERS_ROOT + "/" + Resource.FRAG_SHADERS_SOURCE[i] + ".frag", 
+            int fs = loadShader(Resource.SHADERS_ROOT + "/" + Resource.FRAG_SHADERS_SOURCE[i] + ".frag",
                     GL_FRAGMENT_SHADER);
 
             programName[i] = GL20.glCreateProgram();
@@ -216,14 +219,18 @@ public class Lwjgl {
             GL11.glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
         GL11.glBindTexture(GL_TEXTURE_2D, textureName.get(Resource.Texture.COLOR));
-        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, (float[]) null);
+//        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT, (float[]) null);
+        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, windowSize.x, windowSize.y, 0, GL_RGBA, GL_FLOAT,
+                (java.nio.ByteBuffer) null);
 
         GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
         GL11.glBindTexture(GL_TEXTURE_2D, textureName.get(Resource.Texture.DEPTH));
+//        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT,
+//                GL_FLOAT, (float[]) null);
         GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, windowSize.x, windowSize.y, 0, GL_DEPTH_COMPONENT,
-                GL_FLOAT, (float[]) null);
+                GL_FLOAT, (java.nio.ByteBuffer) null);
 
         GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         GL11.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
@@ -368,13 +375,19 @@ public class Lwjgl {
                     break;
             }
 
-            cpuTotal_ns += System.nanoTime() - cpuStart_ns;
-
+//            cpuTotal_ns += System.nanoTime() - cpuStart_ns;
             frames++;
 
             if ((System.currentTimeMillis() - updateStart_ms) > updateInterval_ms) {
 
                 int totalSwitches = repeat * frames * 1;
+
+                long now = System.nanoTime();
+                cpuTotal_ns = now - cpuStart_ns;
+                cpuStart_ns = now;
+
+                System.out.println("totalSwitches: " + totalSwitches);
+                System.out.println("cpuTotal_ns: " + cpuTotal_ns);
 
                 String switchesPerS = String.format("%,.0f", totalSwitches / ((double) cpuTotal_ns / 1_000_000_000));
                 System.out.println("switches per seconds: " + switchesPerS);

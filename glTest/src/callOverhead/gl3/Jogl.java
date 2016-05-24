@@ -132,7 +132,6 @@ public class Jogl implements GLEventListener, KeyListener {
         initBuffer(gl3);
         initVertexArray(gl3);
 
-        
         mode = Semantic.Mode.FRAMEBUFFER;
 //        update(gl3);
 
@@ -344,13 +343,20 @@ public class Jogl implements GLEventListener, KeyListener {
                 }
                 break;
         }
-        cpuTotal_ns += System.nanoTime() - cpuStart_ns;
+//        cpuTotal_ns += System.nanoTime() - cpuStart_ns;
 
         frames++;
 
         if ((System.currentTimeMillis() - updateStart_ms) > updateInterval_ms) {
 
             int totalSwitches = repeat * frames * 1;
+
+            long now = System.nanoTime();
+            cpuTotal_ns = now - cpuStart_ns;
+            cpuStart_ns = now;
+
+            System.out.println("totalSwitches: " + totalSwitches);
+            System.out.println("cpuTotal_ns: " + cpuTotal_ns);
 
             String switchesPerS = String.format("%,.0f", totalSwitches / ((double) cpuTotal_ns / 1_000_000_000));
             System.out.println("switches per seconds: " + switchesPerS);
