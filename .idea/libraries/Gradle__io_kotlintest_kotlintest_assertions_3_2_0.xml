@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: io.kotlintest:kotlintest-assertions:3.2.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.kotlintest/kotlintest-assertions/3.2.0/b5acdd6c6f45a07f3e191b60a06a2279e1219141/kotlintest-assertions-3.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.kotlintest/kotlintest-assertions/3.2.0/4a7b4c48e4666e6ea5bff9a20b4fbbd196f956cc/kotlintest-assertions-3.2.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
