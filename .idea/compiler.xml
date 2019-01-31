@@ -2,6 +2,8 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="apiTest.main" target="1.8" />
+      <module name="apiTest.test" target="1.8" />
       <module name="com.github.kotlin-graphics.glTest.main" target="1.8" />
       <module name="com.github.kotlin-graphics.glTest.test" target="1.8" />
       <module name="glTest.main" target="1.8" />

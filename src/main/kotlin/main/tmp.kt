@@ -100,36 +100,7 @@ fun glDeleteBuffers(
     GL15C.glDeleteBuffers(buffers4)
 }
 
-/**
- *  struct Vertex
- *  {
- *      Vec3 pos;
- *      Vec3 color;
- *  }
- */
-inline class VertexBuffer(val data: FloatBuffer) {
-
-//    val size get() = data.cap / (Vec3.size * 2)
-}
-
-inline class Mat4Buffer(val data: FloatBuffer) : Iterable<Mat4> {
-
-    val indices get() = 0 until size
-
-    operator fun get(index: Int): Mat4 = Mat4(data, index * Mat4.length)
-
-    override fun iterator(): Iterator<Mat4> = Mat4BufferIterator()
-
-    inner class Mat4BufferIterator : Iterator<Mat4> {
-
-        private var pos = data.pos / Mat4.length
-
-        override fun next() = Mat4(data, pos).also { pos += Mat4.length }
-        override fun hasNext() = data.rem > 0
-    }
-
-    val size get() = data.cap / Mat4.length
-}
+fun DrawElementsIndirectCommand(data: ByteBuffer) = DrawElementsIndirectCommand(data.asIntBuffer())
 
 inline class DrawElementsIndirectCommand(val data: IntBuffer) {
     var count: Int
@@ -158,6 +129,8 @@ inline class DrawElementsIndirectCommand(val data: IntBuffer) {
             data.put(data.pos + 4, value)
         }
 
+    infix fun to(buffer: ByteBuffer) = to(buffer.asIntBuffer())
+
     infix fun to(buffer: IntBuffer) {
         val pos = buffer.pos
         buffer[pos] = count
@@ -172,6 +145,8 @@ inline class DrawElementsIndirectCommand(val data: IntBuffer) {
         val size = 5 * Int.BYTES
     }
 }
+
+fun DrawElementsIndirectCommandBuffer(data: ByteBuffer) = DrawElementsIndirectCommandBuffer(data.asIntBuffer())
 
 inline class DrawElementsIndirectCommandBuffer(val data: IntBuffer) {
     operator fun get(index: Int): DrawElementsIndirectCommand {
@@ -225,8 +200,8 @@ inline class BindlessPtrNV(val data: ByteBuffer) {
 
 inline class CommandNV(val data: ByteBuffer) {
     var draw: DrawElementsIndirectCommand
-        get() = DrawElementsIndirectCommand(data.asIntBuffer())
-        set(value) = value to data.asIntBuffer()
+        get() = DrawElementsIndirectCommand(data)
+        set(value) = value to data
     var reserved: Int
         get() = data.getInt(DrawElementsIndirectCommand.size)
         set(value) {
