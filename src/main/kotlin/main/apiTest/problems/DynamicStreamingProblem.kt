@@ -20,9 +20,9 @@ inline class Vec2Buffer(val data: FloatBuffer) {
 
     fun free() = data.free()
 
-    val rem get() = data.rem / Vec2.size
+    val cap get() = data.cap / Vec2.length
 
-    val remSize get() = data.rem.L
+    val capSize get() = data.cap.L
 
     fun adr(index: Int) = data.adr + index * Vec2.size
 
@@ -39,7 +39,6 @@ class DynamicStreamingProblem : Problem() {
     val particleCount = Vec2i(500, 320)
     val particleTotal = particleCount.x * particleCount.y
     val vertexCount = particleTotal * vertsPerParticle
-    val particleBufferSize = Vec2.size * vertexCount
 
     var vertexData: Vec2Buffer? = null
     var iteration = 0
@@ -50,7 +49,7 @@ class DynamicStreamingProblem : Problem() {
     }
 
     override fun init(): Boolean {
-        vertexData = Vec2Buffer(particleTotal * vertsPerParticle)
+        vertexData = Vec2Buffer(vertexCount)
         return true
     }
 
@@ -113,9 +112,8 @@ class DynamicStreamingProblem : Problem() {
                     set(address + 3, x + offsetX + w, y + offsetY + 0)
                     set(address + 4, x + offsetX + 0, y + offsetY + h)
                     set(address + 5, x + offsetX + w, y + offsetY + h)
-
-                    address += vertsPerParticle
                 }
+                address += vertsPerParticle
             }
         }
 

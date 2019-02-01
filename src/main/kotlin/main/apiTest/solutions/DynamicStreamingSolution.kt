@@ -41,20 +41,7 @@ abstract class DynamicStreamingSolution : Solution() {
     var startDestOffset = 0L
     var particleBufferSize = 0L
 
-    abstract fun init(maxVertexCount: Int): Boolean
-    abstract fun render(vertices: Vec2Buffer)
-    abstract override fun shutdown()
-
-    abstract override val name: String
-
-    override val problemName get() = "DynamicStreaming"
-
-    override fun supportsApi(api: OpenGlApi) = api.isOpenGL()
-}
-
-class DynamicStreamingGLBufferSubData : DynamicStreamingSolution() {
-
-    override fun init(maxVertexCount: Int): Boolean {
+    open fun init(maxVertexCount: Int): Boolean {
 
         glGenBuffers(uniformBuffer, vertexBuffer)
 
@@ -65,20 +52,10 @@ class DynamicStreamingGLBufferSubData : DynamicStreamingSolution() {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
             return false
         }
-
-        // Dynamic vertex buffer
-        particleBufferSize = tripleBuffer * Vec2.size * maxVertexCount.L
-
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
-        glBufferData(GL_ARRAY_BUFFER, particleBufferSize, GL_DYNAMIC_DRAW)
-
-        glGenVertexArrays(vao)
-        glBindVertexArray(vao)
-
-        return glGetError() == GL_NO_ERROR
+        return true
     }
 
-    override fun render(vertices: Vec2Buffer) {
+    fun setCommonGlState() {
 
         // Program
         glUseProgram(program)
@@ -109,12 +86,57 @@ class DynamicStreamingGLBufferSubData : DynamicStreamingSolution() {
         // Depth Stencil State
         glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
+    }
 
-        val particleCount = vertices.rem / vertsPerParticle
+    abstract fun render(vertices: Vec2Buffer)
+
+    override fun shutdown() {
+
+        glDisableVertexAttribArray(glf.pos2)
+        glBindVertexArray()
+        glDeleteVertexArrays(vao)
+
+        if (glIsBuffer(vertexBuffer)) glDeleteBuffers(vertexBuffer)
+        if (glIsBuffer(uniformBuffer)) glDeleteBuffers(uniformBuffer)
+
+        glDeleteProgram(program)
+    }
+
+    abstract override val name: String
+
+    override val problemName get() = "DynamicStreaming"
+
+    override fun supportsApi(api: OpenGlApi) = api.isOpenGL()
+}
+
+class DynamicStreamingGLBufferSubData : DynamicStreamingSolution() {
+
+    override fun init(maxVertexCount: Int): Boolean {
+
+        if (!super.init(maxVertexCount)) return false
+
+        // Dynamic vertex buffer
+        particleBufferSize = tripleBuffer * Vec2.size * maxVertexCount.L
+
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        glBufferData(GL_ARRAY_BUFFER, particleBufferSize, GL_DYNAMIC_DRAW)
+
+        glGenVertexArrays(vao)
+        glBindVertexArray(vao)
+
+        return glGetError() == GL_NO_ERROR
+    }
+
+    override fun render(vertices: Vec2Buffer) {
+
+        setCommonGlState()
+
+        val particleCount = vertices.cap / vertsPerParticle
         val particleSizeBytes = vertsPerParticle * Vec2.size
         val startIndex = startDestOffset / Vec2.size
 
-        for (i in 0 until particleCount)        {
+        for (i in 0 until particleCount) {
+
             val vertexOffset = i * vertsPerParticle
             val srcOffset = vertexOffset
             val dstOffset = startDestOffset + i * particleSizeBytes
@@ -130,17 +152,7 @@ class DynamicStreamingGLBufferSubData : DynamicStreamingSolution() {
             glBufferData(GL_ARRAY_BUFFER, particleBufferSize, GL_DYNAMIC_DRAW)
     }
 
-    override fun shutdown() {
-
-        glDisableVertexAttribArray(glf.pos2)
-        glDeleteVertexArrays(vao)
-
-        glDeleteBuffers(vertexBuffer, uniformBuffer)
-
-        glDeleteProgram(program)
-    }
-
-    override val name   get() = "GLBufferSubData"
+    override val name get() = "GLBufferSubData"
 }
 
 class DynamicStreamingGLMapPersistent : DynamicStreamingSolution() {
@@ -156,15 +168,7 @@ class DynamicStreamingGLMapPersistent : DynamicStreamingSolution() {
             return false
         }
 
-        glGenBuffers(uniformBuffer, vertexBuffer)
-
-        // Program
-        program = GlslProgram.fromRoot("shaders", "streaming").name
-
-        if (program == 0) {
-            System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
-            return false
-        }
+        if (!super.init(maxVertexCount)) return false
 
         // Dynamic vertex buffer
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
@@ -182,74 +186,42 @@ class DynamicStreamingGLMapPersistent : DynamicStreamingSolution() {
 
     override fun render(vertices: Vec2Buffer) {
 
-        // Program
-        glUseProgram(program)
+        setCommonGlState()
 
-        // Uniforms
-        constants[0] = 2f / size.x
-        constants[1] = -2f / size.y
-
-        glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer)
-        glBufferData(GL_UNIFORM_BUFFER, constants, GL_DYNAMIC_DRAW)
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer)
-
-        // Input Layout
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
-        glVertexAttribPointer(glf.pos2)
-        glEnableVertexAttribArray(glf.pos2)
-
-        // Rasterizer State
-        glDisable(GL_CULL_FACE)
-        glCullFace(GL_FRONT)
-        glDisable(GL_SCISSOR_TEST)
-        glViewport(size)
-
-        // Blend State
-        glDisable(GL_BLEND)
-        glColorMask(true)
-
-        // Depth Stencil State
-        glDisable(GL_DEPTH_TEST)
-        glDepthMask(false)
-
-        val particleCount = vertices.rem / vertsPerParticle
+        val particleCount = vertices.cap / vertsPerParticle
         val particleSizeBytes = vertsPerParticle * Vec2.size
         val startIndex = startDestOffset.i / Vec2.size
 
-        // Need to wait for this area to become available. If we've sized things properly, it will always be
-        // available right away.
-        bufferLockManager.waitForLockedRange(startDestOffset, vertices.remSize)
+        // Need to wait for this area to become available.
+        // If we've sized things properly, it will always be available right away.
+        bufferLockManager.waitForAndLockRange(startDestOffset, vertices.capSize) {
 
-        for (i in 0 until particleCount)        {
-            val vertexOffset = i * vertsPerParticle
-            val srcOffset = vertexOffset
-            val dstOffset = startDestOffset + i * particleSizeBytes
+            for (i in 0 until particleCount) {
+                val vertexOffset = i * vertsPerParticle
+                val srcOffset = vertexOffset
+                val dstOffset = startDestOffset + i * particleSizeBytes
 
-            val dst = vertexData!!.adr + dstOffset
-            memCopy(vertices.adr(vertexOffset), dst, particleSizeBytes)
+                val dst = vertexData!!.adr + dstOffset
+                memCopy(vertices.adr(srcOffset), dst, particleSizeBytes)
 
-            glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle)
-        }
-
-        // Lock this area for the future.
-        bufferLockManager.lockRange(startDestOffset, vertices.remSize)
+                glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle)
+            }
+        } // the same area will be automatically locked at the end for the future.
 
         startDestOffset = (startDestOffset + particleCount * particleSizeBytes) % particleBufferSize
     }
 
     override fun shutdown() {
 
-        glDisableVertexAttribArray(0)
-        glDeleteVertexArrays(vao)
+        bufferLockManager.destroy()
 
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
         glUnmapBuffer(GL_ARRAY_BUFFER)
-        glDeleteBuffers(vertexBuffer, uniformBuffer)
 
-        glDeleteProgram(program)
+        super.shutdown()
     }
 
-    override val name   get() = "GLMapPersistent"
+    override val name get() = "GLMapPersistent"
 }
 
 class DynamicStreamingGLMapUnsynchronized : DynamicStreamingSolution() {
@@ -258,15 +230,7 @@ class DynamicStreamingGLMapUnsynchronized : DynamicStreamingSolution() {
 
     override fun init(maxVertexCount: Int): Boolean {
 
-        glGenBuffers(uniformBuffer, vertexBuffer)
-
-        // Program
-        program = GlslProgram.fromRoot("shaders", "streaming").name
-
-        if (program == 0) {
-            System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
-            return false
-        }
+        if (!super.init(maxVertexCount)) return false
 
         // Dynamic vertex buffer
         particleBufferSize = tripleBuffer * Vec2.size * maxVertexCount.L
@@ -282,72 +246,37 @@ class DynamicStreamingGLMapUnsynchronized : DynamicStreamingSolution() {
 
     override fun render(vertices: Vec2Buffer) {
 
-        // Program
-        glUseProgram(program)
+        setCommonGlState()
 
-        // Uniforms
-        constants[0] = 2f / size.x
-        constants[1] = -2f / size.y
-
-        glBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer)
-        glBufferData(GL_UNIFORM_BUFFER, constants, GL_DYNAMIC_DRAW)
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniformBuffer)
-
-        // Input Layout
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
-        glVertexAttribPointer(glf.pos2)
-        glEnableVertexAttribArray(glf.pos2
-        )
-
-        // Rasterizer State
-        glDisable(GL_CULL_FACE)
-        glCullFace(GL_FRONT)
-        glDisable(GL_SCISSOR_TEST)
-        glViewport(size)
-
-        // Blend State
-        glDisable(GL_BLEND)
-        glColorMask(true)
-
-        // Depth Stencil State
-        glDisable(GL_DEPTH_TEST)
-        glDepthMask(false)
-
-        val particleCount = vertices.rem / vertsPerParticle
+        val particleCount = vertices.cap / vertsPerParticle
         val particleSizeBytes = vertsPerParticle * Vec2.size
         val startIndex = startDestOffset.i / Vec2.size
         val access = GL_MAP_WRITE_BIT or GL_MAP_INVALIDATE_RANGE_BIT or GL_MAP_UNSYNCHRONIZED_BIT
 
-        bufferLockManager.waitForLockedRange(startDestOffset, vertices.remSize)
+        bufferLockManager.waitForAndLockRange(startDestOffset, vertices.capSize) {
 
-        for (i in 0 until particleCount)        {
-            val vertexOffset = i * vertsPerParticle
-            val srcOffset = vertexOffset
-            val dstOffset = startDestOffset + i * particleSizeBytes
+            for (i in 0 until particleCount) {
+                val vertexOffset = i * vertsPerParticle
+                val srcOffset = vertexOffset
+                val dstOffset = startDestOffset + i * particleSizeBytes
 
-            glMapBufferRange(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes.L, access)?.let { dst ->
+                glMapBufferRange(GL_ARRAY_BUFFER, dstOffset, particleSizeBytes.L, access)?.let { dst ->
 
-                memCopy(vertices.adr(vertexOffset), dst.adr, particleSizeBytes)
-                glUnmapBuffer(GL_ARRAY_BUFFER)
+                    memCopy(vertices.adr(srcOffset), dst.adr, particleSizeBytes)
+                    glUnmapBuffer(GL_ARRAY_BUFFER)
 
-                glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle)
+                    glDrawArrays(GL_TRIANGLES, startIndex + vertexOffset, vertsPerParticle)
+                }
             }
         }
-
-        bufferLockManager.lockRange(startDestOffset, vertices.remSize)
 
         startDestOffset = (startDestOffset + particleCount * particleSizeBytes) % particleBufferSize
     }
 
     override fun shutdown() {
-
-        glDisableVertexAttribArray(0)
-        glDeleteVertexArrays(vao)
-
-        glDeleteBuffers(vertexBuffer, uniformBuffer)
-
-        glDeleteProgram(program)
+        bufferLockManager.destroy()
+        super.shutdown()
     }
 
-    override val name   get() = "GLMapUnsynchronized"
+    override val name get() = "GLMapUnsynchronized"
 }
