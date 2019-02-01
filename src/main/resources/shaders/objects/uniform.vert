@@ -1,20 +1,19 @@
-#version 450
+#version 440    // ARB_separate_shader_objects
 
 // Attributes
 #define POSITION    0
-#define COLOR       1
+#define COLOR       3
 
 // Uniform
-#define TRANSFORM0  0
-#define TRANSFORM1  1
+#define TRANSFORM0  1
+#define TRANSFORM1  2
 
 // Interface
 #define BLOCK   0
 
-precision highp float;
-precision highp int;
+
 layout(std140, column_major) uniform;
-layout(std430, column_major) buffer;
+
 
 // Input -----------------------------------------------------------------------
 layout (location = POSITION) in vec3 inPos;

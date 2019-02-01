@@ -160,7 +160,7 @@ class ObjectsProblem : Problem() {
 
         assert(vertexCount == vertices.size) { "VertexA count mismatch" }
 
-        val indices = when {
+        indices = when {
             DRAW_SINGLE_TRIANGLE -> shortBufferOf(0, 1, 2)
             else -> shortBufferOf(
                     0, 1, 2, 0, 2, 3,
@@ -170,5 +170,7 @@ class ObjectsProblem : Problem() {
                     1, 7, 6, 1, 0, 7,
                     0, 3, 4, 0, 4, 7)
         }
+
+        assert(indexCount == indices.remSize) { "Index count mismatch" }
     }
 }

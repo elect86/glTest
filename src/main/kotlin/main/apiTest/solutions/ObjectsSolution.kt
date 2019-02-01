@@ -20,6 +20,7 @@ import main.apiTest.framework.*
 import main.apiTest.problems.VertexBufferA
 import org.lwjgl.opengl.GL11.glDisableClientState
 import org.lwjgl.opengl.GL11.glEnableClientState
+import org.lwjgl.opengl.GL20C
 import org.lwjgl.opengl.GL20C.glUseProgram
 import org.lwjgl.opengl.GL33C.glVertexAttribDivisor
 import org.lwjgl.opengl.GL40C.GL_DRAW_INDIRECT_BUFFER
@@ -108,7 +109,7 @@ class ObjectsGLUniform : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "uniform").name
+        program = GlslProgram.fromRoot("shaders/objects", "uniform").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -142,9 +143,11 @@ class ObjectsGLUniform : ObjectsSolution() {
 
         setCommonGlState()
 
-        for (m in transforms) {
-            glUniform(semantic.uniform.TRANSFORM1, m)
+        var adr = transforms.data.adr
+        for (i in 0 until transforms.size) { // avoid Mat4 allocation
+            nglUniformMatrix4fv(semantic.uniform.TRANSFORM1, 1, false, adr)
             glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0)
+            adr += Mat4.size
         }
     }
 
@@ -170,7 +173,7 @@ class ObjectsGLDrawLoop : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "draw-loop").name
+        program = GlslProgram.fromRoot("/shaders/objects", "draw-loop").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -258,7 +261,7 @@ class ObjectsGLMultiDraw(
             null -> "SDP"
             else -> "NoSDP"
         }}"
-        program = GlslProgram.fromRoot("/shaders/untextured", shader).name
+        program = GlslProgram.fromRoot("/shaders/objects", shader).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -372,7 +375,7 @@ class ObjectsGLMultiDrawBuffer(
             null -> "SDP"
             else -> "NoSDP"
         }}"
-        program = GlslProgram.fromRoot("/shaders/untextured", shader).name
+        program = GlslProgram.fromRoot("/shaders/objects", shader).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -488,7 +491,7 @@ class ObjectsGLBindless : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "bindless").name
+        program = GlslProgram.fromRoot("/shaders/objects", "bindless").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -612,7 +615,7 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "bindless-indirect").name
+        program = GlslProgram.fromRoot("/shaders/objects", "bindless-indirect").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -798,7 +801,7 @@ class ObjectsGLBufferRange : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "buffer-range").name
+        program = GlslProgram.fromRoot("/shaders/objects", "buffer-range").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -919,7 +922,7 @@ class ObjectsGLBufferStorage(
             null -> "SDP"
             else -> "NoSDP"
         }}"
-        program = GlslProgram.fromRoot("/shaders/untextured", shader).name
+        program = GlslProgram.fromRoot("/shaders/objects", shader).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1027,7 +1030,7 @@ class ObjectsGLDynamicBuffer : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "dynamic-buffer").name
+        program = GlslProgram.fromRoot("/shaders/objects", "dynamic-buffer").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1103,7 +1106,7 @@ class ObjectsGLMapUnsynchronized : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "map").name
+        program = GlslProgram.fromRoot("/shaders/objects", "map").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1206,7 +1209,7 @@ class ObjectsGLMapPersistent : ObjectsSolution() {
         }
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "map").name
+        program = GlslProgram.fromRoot("/shaders/objects", "map").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1294,7 +1297,7 @@ class ObjectsGLTexCoord : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/untextured", "tex-coord").name
+        program = GlslProgram.fromRoot("/shaders/objects", "tex-coord").name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")

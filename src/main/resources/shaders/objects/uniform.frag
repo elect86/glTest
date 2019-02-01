@@ -1,4 +1,4 @@
-#version 450
+#version 440    // ARB_separate_shader_objects
 
 // Interface
 #define BLOCK   0
@@ -6,10 +6,6 @@
 // Output
 #define FRAG_COLOR  0
 
-precision highp float;
-precision highp int;
-layout(std140, column_major) uniform;
-layout(std430, column_major) buffer;
 
 // Uniforms / SSBO -------------------------------------------------------------
 

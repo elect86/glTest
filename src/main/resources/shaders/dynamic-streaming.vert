@@ -1,16 +1,14 @@
 // NOTE: Unlike every other set of Solutions, all of the StreamingVBs currently use this shader.
 // If you need to make modifications for a particular test, create a new shader. 
-#version 450
+#version 420    // ARB_shading_language_420pack
 
 // Attribute
 #define POSITION    0
 // Uniform
 #define CONSTANT    4
 
-precision highp float;
-precision highp int;
+
 layout(std140, column_major) uniform;
-layout(std430, column_major) buffer;
 
 // Uniforms / SSBO -------------------------------------------------------------
 layout(binding = CONSTANT) uniform Cb0

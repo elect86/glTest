@@ -24,7 +24,7 @@ inline class Mat4Buffer(val data: FloatBuffer) : Iterable<Mat4> {
 
 //        override fun next() = Mat4(data, pos).also { pos += Mat4.length } TODO
         override fun next() = Mat4 { _ -> data[pos++] }
-        override fun hasNext() = data.rem > 0
+        override fun hasNext() = pos < data.cap
     }
 
     fun adr(index: Int) = data.adr + index * Mat4.size

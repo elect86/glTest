@@ -47,30 +47,30 @@ class ProblemFactory(skipInit: Boolean) {
             newProb.shutdown()
 
         // Objects
-//        newProb = ObjectsProblem()
-//        if (skipInit || newProb.init()) {
-//            if (!skipInit)
-//                newProb.shutdown()
-//
-//            problems += newProb
-//            solutions[newProb.name] = arrayOf<Solution>(
-//                    ObjectsGLUniform(),
-//                    ObjectsGLDrawLoop(),
-//                    ObjectsGLMultiDraw(true),
-//                    ObjectsGLMultiDraw(false),
-//                    ObjectsGLMultiDrawBuffer(true),
-//                    ObjectsGLMultiDrawBuffer(false),
-//                    ObjectsGLBindless(),
-//                    ObjectsGLBindlessIndirect(),
-//                    ObjectsGLBufferRange(),
-//                    ObjectsGLBufferStorage(true),
-//                    ObjectsGLBufferStorage(false),
-//                    ObjectsGLDynamicBuffer(),
-//                    ObjectsGLMapUnsynchronized(),
-//                    ObjectsGLMapPersistent(),
-//                    ObjectsGLTexCoord())
-//        } else
-//            newProb.shutdown()
+        newProb = ObjectsProblem()
+        if (skipInit || newProb.init()) {
+            if (!skipInit)
+                newProb.shutdown()
+
+            problems += newProb
+            solutions[newProb.name] = arrayOf<Solution>(
+                    ObjectsGLUniform(),
+                    ObjectsGLDrawLoop(),
+                    ObjectsGLMultiDraw(true),
+                    ObjectsGLMultiDraw(false),
+                    ObjectsGLMultiDrawBuffer(true),
+                    ObjectsGLMultiDrawBuffer(false),
+                    ObjectsGLBindless(),
+                    ObjectsGLBindlessIndirect(),
+                    ObjectsGLBufferRange(),
+                    ObjectsGLBufferStorage(true),
+                    ObjectsGLBufferStorage(false),
+                    ObjectsGLDynamicBuffer(),
+                    ObjectsGLMapUnsynchronized(),
+                    ObjectsGLMapPersistent(),
+                    ObjectsGLTexCoord())
+        } else
+            newProb.shutdown()
 
         // Textured Quads
 //        newProb = TexturedQuadsProblem ()
