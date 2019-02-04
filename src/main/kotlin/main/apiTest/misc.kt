@@ -1,5 +1,7 @@
 package main.apiTest
 
+import glm_.func.cos
+import glm_.func.sin
 import glm_.mat4x4.Mat4
 import kool.*
 import java.nio.ByteBuffer
@@ -27,7 +29,26 @@ inline class Mat4Buffer(val data: FloatBuffer) : Iterable<Mat4> {
         override fun hasNext() = pos < data.cap
     }
 
-    fun adr(index: Int) = data.adr + index * Mat4.size
+    val adr get() = data.adr
+
+    fun adr(index: Int) = adr + index * Mat4.size
 
     val size get() = data.cap / Mat4.length
+
+    fun matrixRotationZ(i: Int, angle: Float) {
+        val s = angle.sin
+        val c = angle.cos
+
+        var ofs = i * Mat4.length
+        data
+                .put(ofs++, c).put(ofs++, -s).put(ofs++, 0f).put(ofs++, 0f)
+                .put(ofs++, s).put(ofs++, +c).put(ofs++, 0f).put(ofs++, 0f)
+                .put(ofs++, 0f).put(ofs++, 0f).put(ofs++, 1f).put(ofs++, 0f)
+                .put(ofs++, 0f).put(ofs++, 0f).put(ofs++, 0f).put(ofs, 1f)
+//            m.put(
+//                    c, -s, 0f, 0f,
+//                    s, +c, 0f, 0f,
+//                    0f, 0f, 1f, 0f,
+//                    0f, 0f, 0f, 1f)
+    }
 }

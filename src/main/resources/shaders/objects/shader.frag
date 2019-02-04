@@ -1,13 +1,7 @@
 #version 440    // ARB_separate_shader_objects
 
-// Interface
-#define BLOCK   0
+#include "semantic.glsl"
 
-// Output
-#define FRAG_COLOR  0
-
-
-// Uniforms / SSBO -------------------------------------------------------------
 
 // Input -----------------------------------------------------------------------
 layout (location = BLOCK) in Block 

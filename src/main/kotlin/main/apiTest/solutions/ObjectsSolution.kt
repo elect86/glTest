@@ -20,7 +20,6 @@ import main.apiTest.framework.*
 import main.apiTest.problems.VertexBufferA
 import org.lwjgl.opengl.GL11.glDisableClientState
 import org.lwjgl.opengl.GL11.glEnableClientState
-import org.lwjgl.opengl.GL20C
 import org.lwjgl.opengl.GL20C.glUseProgram
 import org.lwjgl.opengl.GL33C.glVertexAttribDivisor
 import org.lwjgl.opengl.GL40C.GL_DRAW_INDIRECT_BUFFER
@@ -99,6 +98,8 @@ abstract class ObjectsSolution : Solution() {
         if (glIsVertexArray(vao)) glDeleteBuffers(vao)
         glDeleteProgram(program)
     }
+
+    val fragment = "shader"
 }
 
 class ObjectsGLUniform : ObjectsSolution() {
@@ -109,7 +110,7 @@ class ObjectsGLUniform : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("shaders/objects", "uniform").name
+        program = GlslProgram.fromRoot("shaders/objects", "uniform", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -143,7 +144,7 @@ class ObjectsGLUniform : ObjectsSolution() {
 
         setCommonGlState()
 
-        var adr = transforms.data.adr
+        var adr = transforms.adr
         for (i in 0 until transforms.size) { // avoid Mat4 allocation
             nglUniformMatrix4fv(semantic.uniform.TRANSFORM1, 1, false, adr)
             glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0)
@@ -152,9 +153,7 @@ class ObjectsGLUniform : ObjectsSolution() {
     }
 
     override fun shutdown() {
-
         glDisableVertexAttribArray(glf.pos3_col3)
-
         super.shutdown()
     }
 
@@ -164,7 +163,6 @@ class ObjectsGLUniform : ObjectsSolution() {
 class ObjectsGLDrawLoop : ObjectsSolution() {
 
     val drawId = IntBuffer(1)
-
     val transformBuffer = IntBuffer(1)
 
     override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
@@ -173,7 +171,7 @@ class ObjectsGLDrawLoop : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "draw-loop").name
+        program = GlslProgram.fromRoot("shaders/objects", "draw-loop", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -191,10 +189,10 @@ class ObjectsGLDrawLoop : ObjectsSolution() {
         glVertexAttribPointer(glf.pos3_col3)
         glEnableVertexAttribArray(glf.pos3_col3)
 
-        val drawIds = IntBuffer(objectCount) { it }
-
-        glBindBuffer(GL_ARRAY_BUFFER, drawId)
-        glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+        IntBuffer(objectCount) { it }.use { drawIds ->
+            glBindBuffer(GL_ARRAY_BUFFER, drawId)
+            glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+        }
         glVertexAttribIPointer(semantic.attr.DRAW_ID, 1, GL_UNSIGNED_INT, Int.BYTES, 0)
         glVertexAttribDivisor(semantic.attr.DRAW_ID, 1)
         glEnableVertexAttribArray(semantic.attr.DRAW_ID)
@@ -202,7 +200,7 @@ class ObjectsGLDrawLoop : ObjectsSolution() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transformBuffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, semantic.storage.CONSTANT, transformBuffer)
 
         return glGetError() == GL_NO_ERROR
     }
@@ -257,11 +255,11 @@ class ObjectsGLMultiDraw(
         }
 
         // Program
-        val shader = "multi-draw-${when (drawId) {
+        val vertex = "multi-draw-${when (drawId) {
             null -> "SDP"
             else -> "NoSDP"
         }}"
-        program = GlslProgram.fromRoot("/shaders/objects", shader).name
+        program = GlslProgram.fromRoot("shaders/objects", vertex, fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -281,11 +279,11 @@ class ObjectsGLMultiDraw(
 
         // If we aren't using shader draw parameters, use the workaround instead.
         drawId?.let {
-            val drawIds = IntBuffer(objectCount) { it }
-
             glGenBuffers(drawId)
             glBindBuffer(GL_ARRAY_BUFFER, drawId)
-            glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+            IntBuffer(objectCount) { it }.use { drawIds ->
+                glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+            }
             glVertexAttribIPointer(semantic.attr.DRAW_ID, 1, GL_UNSIGNED_INT, Int.BYTES, 0)
             glVertexAttribDivisor(semantic.attr.DRAW_ID, 1)
             glEnableVertexAttribArray(semantic.attr.DRAW_ID)
@@ -294,7 +292,7 @@ class ObjectsGLMultiDraw(
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transformBuffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, semantic.storage.CONSTANT, transformBuffer)
 
         // Set the command buffer size.
         commands = DrawElementsIndirectCommandBuffer(objectCount)
@@ -354,7 +352,6 @@ class ObjectsGLMultiDrawBuffer(
         useShaderDraw: Boolean) : ObjectsSolution() {
 
     val drawId = if (useShaderDraw) null else IntBuffer(1)
-
     val transformBuffer = IntBuffer(1)
 
     var commands: DrawElementsIndirectCommandBuffer? = null
@@ -371,11 +368,11 @@ class ObjectsGLMultiDrawBuffer(
         }
 
         // Program
-        val shader = "multi-draw-${when (drawId) {
+        val vertex = "multi-draw-${when (drawId) {
             null -> "SDP"
             else -> "NoSDP"
         }}"
-        program = GlslProgram.fromRoot("/shaders/objects", shader).name
+        program = GlslProgram.fromRoot("shaders/objects", vertex, fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -395,11 +392,11 @@ class ObjectsGLMultiDrawBuffer(
 
         // If we aren't using shader draw parameters, use the workaround instead.
         drawId?.let {
-            val drawIds = IntBuffer(objectCount) { it }
-
             glGenBuffers(drawId)
             glBindBuffer(GL_ARRAY_BUFFER, drawId)
-            glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+            IntBuffer(objectCount) { it }.use { drawIds ->
+                glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+            }
             glVertexAttribIPointer(semantic.attr.DRAW_ID, 1, GL_UNSIGNED_INT, Int.BYTES, 0)
             glVertexAttribDivisor(semantic.attr.DRAW_ID, 1)
             glEnableVertexAttribArray(semantic.attr.DRAW_ID)
@@ -408,7 +405,7 @@ class ObjectsGLMultiDrawBuffer(
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transformBuffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, semantic.storage.CONSTANT, transformBuffer)
 
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, cmdBuffer)
 
@@ -455,6 +452,7 @@ class ObjectsGLMultiDrawBuffer(
         glDisableVertexAttribArray(glf.pos3_col3)
 
         glDeleteBuffers(transformBuffer, cmdBuffer)
+        commands!!.free()
 
         super.shutdown()
     }
@@ -491,34 +489,33 @@ class ObjectsGLBindless : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "bindless").name
+        program = GlslProgram.fromRoot("shaders/objects", "bindless", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
             return false
         }
 
+
         ibs = IntBuffer(objectCount)
         ibAddrs = LongBuffer(objectCount)
-        ibSizes = LongBuffer(objectCount)
+        ibSizes = LongBuffer(objectCount) { indices.cap * Short.BYTES.L }
 
         vbs = IntBuffer(objectCount)
         vboAddrs = LongBuffer(objectCount)
-        vboSizes = LongBuffer(objectCount)
+        vboSizes = LongBuffer(objectCount) { vertices.data.cap.L }
 
         glGenBuffers(ibs, vbs)
         for (u in 0 until objectCount) {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibs[u])
             glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indices, 0)
-            nglGetBufferParameterui64vNV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, ibAddrs.adr(u))
+            ibAddrs[u] = glGetBufferParameterui64NV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV)
             glMakeBufferResidentNV(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY)
-            ibSizes[u] = indices.cap * Short.BYTES
 
             glBindBuffer(GL_ARRAY_BUFFER, vbs[u])
             glBufferStorage(GL_ARRAY_BUFFER, vertices.data, 0)
-            nglGetBufferParameterui64vNV(GL_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, vboAddrs.adr(u))
+            vboAddrs[u] = glGetBufferParameterui64NV(GL_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV)
             glMakeBufferResidentNV(GL_ARRAY_BUFFER, GL_READ_ONLY)
-            vboSizes[u] = vertices.data.cap
         }
 
         glGenVertexArrays(vao)

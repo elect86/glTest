@@ -2,6 +2,7 @@ package main
 
 import glm_.BYTES
 import glm_.mat4x4.Mat4
+import gln.glf.semantic
 import kool.*
 import org.lwjgl.opengl.GL15C
 import org.lwjgl.opengl.GL30C
@@ -10,6 +11,8 @@ import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 import java.nio.LongBuffer
+
+val semantic.storage.CONSTANT get() = 1
 
 inline fun glColorMask(mask: Boolean) = GL15C.glColorMask(mask, mask, mask, mask)
 
@@ -154,6 +157,8 @@ inline class DrawElementsIndirectCommandBuffer(val data: IntBuffer) {
         val buf = memIntBuffer(adr, DrawElementsIndirectCommand.length)
         return DrawElementsIndirectCommand(buf)
     }
+
+    fun free() = data.free()
 
     val size get() = data.cap / DrawElementsIndirectCommand.length
 }

@@ -1,18 +1,6 @@
 #version 440    // ARB_separate_shader_objects
 
-// Attributes
-#define POSITION    0
-#define COLOR       3
-
-// Uniform
-#define TRANSFORM0  1
-#define TRANSFORM1  2
-
-// Interface
-#define BLOCK   0
-
-
-layout(std140, column_major) uniform;
+#include "semantic.glsl"
 
 
 // Input -----------------------------------------------------------------------

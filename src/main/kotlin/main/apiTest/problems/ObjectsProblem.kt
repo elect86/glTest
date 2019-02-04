@@ -110,28 +110,17 @@ class ObjectsProblem : Problem() {
 
     fun update() {
 
-        fun rotationZ(m: Mat4, angle: Float) {
-            val s = angle.sin
-            val c = angle.cos
-
-            m.put(
-                    c, -s, 0f, 0f,
-                    s, +c, 0f, 0f,
-                    0f, 0f, 1f, 0f,
-                    0f, 0f, 0f, 1f)
-        }
-
         val angle = iteration * 0.01f
 
         var mIdx = 0
         for (x in 0 until objectsX) {
             for (y in 0 until objectsY) {
                 for (z in 0 until objectsZ) {
-                    val m = transforms!![mIdx++]
-                    rotationZ(m, angle)
-                    m[3, 0] = 2f * x - objectsX
-                    m[3, 1] = 2f * y - objectsY
-                    m[3, 2] = 2f * z - objectsZ
+                    transforms!!.matrixRotationZ(mIdx, angle)
+                    transforms!!.data
+                            .put(mIdx * Mat4.length + 12, 2f * x - objectsX)
+                            .put(mIdx * Mat4.length + 13, 2f * y - objectsY)
+                            .put(mIdx++ * Mat4.length + 14, 2f * z - objectsZ)
                 }
             }
         }
@@ -171,6 +160,6 @@ class ObjectsProblem : Problem() {
                     0, 3, 4, 0, 4, 7)
         }
 
-        assert(indexCount == indices.remSize) { "Index count mismatch" }
+        assert(indexCount == indices.cap) { "Index count mismatch" }
     }
 }
