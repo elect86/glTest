@@ -1,0 +1,20 @@
+#version 150 core
+//#extension GL_EXT_bindable_uniform : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+in vec3 s_pos;
+in vec3 s_normal;
+in vec2 s_uv;
+
+uniform mat4 ModelViewProjectionMatrix;
+uniform samplerBuffer s_texture_0; //our TBO texture bufer
+
+out vec3 instance_color;
+
+void main()
+{
+	//sample data from TBO
+	vec4 instance_pos = texelFetch(s_texture_0, gl_InstanceID*2);
+	instance_color = texelFetch(s_texture_0, gl_InstanceID*2+1).xyz;
+	gl_Position = ModelViewProjectionMatrix * vec4(s_pos + instance_pos.xyz, 1.0);
+}

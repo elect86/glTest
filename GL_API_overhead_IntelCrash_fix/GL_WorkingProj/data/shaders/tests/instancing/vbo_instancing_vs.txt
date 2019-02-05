@@ -1,0 +1,19 @@
+#version 150 core
+
+in vec3 s_pos;
+in vec3 s_normal;
+in vec2 s_uv;
+in vec4 s_attribute_3; //some_data;
+
+in vec4 s_attribute_4; //instance pos
+in vec4 s_attribute_5; //instance color
+
+uniform mat4 ModelViewProjectionMatrix;
+
+out vec3 instance_color;
+
+void main()
+{
+	instance_color = s_attribute_5.xyz;
+	gl_Position = ModelViewProjectionMatrix * vec4(s_pos + s_attribute_4.xyz, 1.0);
+}

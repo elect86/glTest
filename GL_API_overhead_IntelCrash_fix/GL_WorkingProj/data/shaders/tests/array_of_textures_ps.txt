@@ -1,0 +1,24 @@
+#version 150 core
+
+uniform sampler2D s_texture_0;
+uniform sampler2D s_texture_1;
+uniform sampler2D s_texture_2;
+uniform sampler2D s_texture_3;
+uniform sampler2D s_texture_4;
+uniform sampler2D s_texture_5;
+
+in vec2 uv;
+in vec3 instance_color;
+out vec4 outColor;
+
+void main()
+{
+	//simple sample all textures with different weights
+	outColor = vec4(
+		(texture(s_texture_0, uv).xyz * 6 +
+		texture(s_texture_1, uv).xyz * 5 +
+		texture(s_texture_2, uv).xyz * 4 +
+		texture(s_texture_3, uv).xyz * 3 +
+		texture(s_texture_4, uv).xyz * 2 +		
+		texture(s_texture_5, uv).xyz * 1) * instance_color / 21.0, 1.0);
+}

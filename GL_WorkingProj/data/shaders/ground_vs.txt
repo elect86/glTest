@@ -1,0 +1,14 @@
+#version 150 core
+
+in vec3 s_pos;
+in vec3 s_normal;
+in vec2 s_uv;
+
+out vec2 uv;
+uniform mat4 ModelViewProjectionMatrix;
+
+void main()
+{
+	uv = s_uv;
+	gl_Position = ModelViewProjectionMatrix * vec4(s_pos, 1.0);
+}

@@ -1,0 +1,33 @@
+CPU: Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz
+GPU: GeForce GTX 1080 Ti/PCIe/SSE2
+
+Parameters: CURRENT_NUM_INSTANCES 1000   NUM_FBO_CHANGES 200   INSTANCING_NUM_ITERATIONS 100. Time in ms.
+
+---States changing time:
+SIMPLE_DIPS_TEST                 0.25
+FBO_CHANGE_TEST                  1.19
+SHADERS_CHANGE_TEST              1.32
+VBO_CHANGE_TEST                  0.31
+ARRAY_OF_TEXTURES_TEST           0.96
+TEXTURES_ARRAY_TEST              0.32
+UNIFORMS_SIMPLE_CHANGE_TEST      0.67
+UNIFORMS_SSBO_TEST               0.56
+
+---API call cost:
+glBindFramebuffer:               5.69   2238% 
+glUseProgram:                    1.07   420% 
+glBindVertexArray:               0.05   21% 
+glBindTexture:                   0.12   46% 
+glDrawRangeElements:             0.25   100% 
+glUniform4fv:                    0.04   16% 
+
+---Instancing time:
+cpu time (gpu time)
+num instances                       50            100           200
+UBO_INSTANCING                   0.30 (0.03)   0.29 (0.06)   0.29 (0.12)
+TBO_INSTANCING                   2.63 (2.54)   2.62 (2.52)   2.66 (2.57)
+SSBO_INSTANCING                  0.31 (0.03)   0.31 (0.06)   0.32 (0.12)
+VBO_INSTANCING                   0.29 (0.03)   0.28 (0.06)   0.28 (0.12)
+TEXTURE_INSTANCING               0.31 (0.03)   0.31 (0.06)   0.30 (0.12)
+UNIFORMS_INSTANCING              0.31 (0.03)   0.33 (0.06)   0.38 (0.12)
+MULTI_DRAW_INDIRECT_INSTANCING   1.14 (0.50)   1.13 (0.57)   1.13 (0.69)
