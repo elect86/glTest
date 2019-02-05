@@ -1,4 +1,4 @@
-package main.apiTest.solutions
+package main.glTest.solutions
 
 import gli_.memCopy
 import glm_.L
@@ -15,11 +15,11 @@ import gln.vertexArray.glEnableVertexAttribArray
 import gln.vertexArray.glVertexAttribPointer
 import kool.*
 import main.*
-import main.apiTest.framework.BufferLockManager
-import main.apiTest.framework.OpenGlApi
-import main.apiTest.framework.tripleBuffer
-import main.apiTest.problems.Vec2Buffer
-import main.apiTest.problems.vertsPerParticle
+import main.glTest.framework.BufferLockManager
+import main.glTest.framework.OpenGlApi
+import main.glTest.framework.tripleBuffer
+import main.glTest.problems.Vec2Buffer
+import main.glTest.problems.vertsPerParticle
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL20C.glUseProgram
 import org.lwjgl.opengl.GL31C.GL_UNIFORM_BUFFER

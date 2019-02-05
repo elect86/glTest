@@ -3,15 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main.apiTest.problems
+package main.glTest.problems
 
 import glm_.L
 import glm_.vec2.Vec2
 import glm_.vec2.Vec2i
 import glm_.vec4.Vec4
 import kool.*
-import main.apiTest.solutions.DynamicStreamingSolution
-import main.apiTest.solutions.Solution
+import main.glTest.solutions.DynamicStreamingSolution
+import main.glTest.solutions.Solution
 import java.nio.FloatBuffer
 
 val vertsPerParticle = 6

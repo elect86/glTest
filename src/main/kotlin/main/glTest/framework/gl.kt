@@ -1,4 +1,4 @@
-package main.apiTest.framework
+package main.glTest.framework
 
 import glm_.vec2.Vec2i
 import glm_.vec4.Vec4
@@ -7,15 +7,12 @@ import gln.glViewport
 import gln.vertexArray.glBindVertexArray
 import kool.IntBuffer
 import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11C
 import org.lwjgl.opengl.GL20C.GL_SHADING_LANGUAGE_VERSION
-import org.lwjgl.opengl.GL30C.*
 import org.lwjgl.opengl.GL41C.glClearDepthf
 import org.lwjgl.opengl.GL43C.*
 import org.lwjgl.opengl.GLCapabilities
 import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Callback
-import org.lwjgl.system.MemoryUtil.NULL
 import uno.glfw.GlfwWindow
 import uno.glfw.VSync
 import uno.glfw.glfw

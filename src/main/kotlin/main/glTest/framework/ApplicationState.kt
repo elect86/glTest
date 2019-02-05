@@ -3,14 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main.apiTest.framework
+package main.glTest.framework
 
 import glm_.max
-import java.util.ArrayList
 import glm_.vec2.Vec2i
-import main.apiTest.solutions.Solution
+import main.glTest.solutions.Solution
 import org.lwjgl.system.Platform
-import uno.glfw.glfw
 import java.lang.Error
 
 

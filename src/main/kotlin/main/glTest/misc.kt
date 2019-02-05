@@ -1,4 +1,4 @@
-package main.apiTest
+package main.glTest
 
 import glm_.func.cos
 import glm_.func.sin

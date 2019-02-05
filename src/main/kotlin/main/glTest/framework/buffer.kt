@@ -1,7 +1,6 @@
-package main.apiTest.framework
+package main.glTest.framework
 
 import glm_.L
-import glm_.i
 import gln.GLbitfield
 import kool.*
 import main.glBindBuffer

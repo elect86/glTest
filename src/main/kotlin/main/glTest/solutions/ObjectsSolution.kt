@@ -1,4 +1,4 @@
-package main.apiTest.solutions
+package main.glTest.solutions
 
 import glm_.*
 import glm_.mat4x4.Mat4
@@ -15,9 +15,9 @@ import gln.vertexArray.glEnableVertexAttribArray
 import gln.vertexArray.glVertexAttribPointer
 import kool.*
 import main.*
-import main.apiTest.Mat4Buffer
-import main.apiTest.framework.*
-import main.apiTest.problems.VertexBufferA
+import main.glTest.Mat4Buffer
+import main.glTest.framework.*
+import main.glTest.problems.VertexBufferA
 import org.lwjgl.opengl.GL11.glDisableClientState
 import org.lwjgl.opengl.GL11.glEnableClientState
 import org.lwjgl.opengl.GL20C.glUseProgram

@@ -1,9 +1,9 @@
-package main.apiTest.framework
+package main.glTest.framework
 
 import gli_.has
 import glm_.d
 import glm_.vec4.Vec4
-import main.apiTest.problems.Problem
+import main.glTest.problems.Problem
 import org.lwjgl.glfw.GLFW.*
 import uno.glfw.KeyCallbackT
 import uno.glfw.glfw

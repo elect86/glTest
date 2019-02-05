@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main.apiTest.problems
+package main.glTest.problems
 
 import glm_.vec4.Vec4
-import main.apiTest.solutions.NullSolution
-import main.apiTest.solutions.Solution
+import main.glTest.solutions.NullSolution
+import main.glTest.solutions.Solution
 
 /**
  *

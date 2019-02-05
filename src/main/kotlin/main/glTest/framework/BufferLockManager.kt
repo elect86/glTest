@@ -1,4 +1,4 @@
-package main.apiTest.framework
+package main.glTest.framework
 
 import org.lwjgl.opengl.GL32C.*
 

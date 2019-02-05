@@ -1,15 +1,13 @@
-package main.apiTest.problems
+package main.glTest.problems
 
-import glm_.func.cos
-import glm_.func.sin
 import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.vec3.Vec3
 import glm_.vec4.Vec4
 import kool.*
-import main.apiTest.Mat4Buffer
-import main.apiTest.solutions.Solution
-import main.apiTest.solutions.ObjectsSolution
+import main.glTest.Mat4Buffer
+import main.glTest.solutions.Solution
+import main.glTest.solutions.ObjectsSolution
 import java.nio.FloatBuffer
 import java.nio.ShortBuffer
 

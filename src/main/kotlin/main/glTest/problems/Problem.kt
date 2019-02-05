@@ -1,7 +1,7 @@
-package main.apiTest.problems
+package main.glTest.problems
 
 import glm_.vec4.Vec4
-import main.apiTest.solutions.Solution
+import main.glTest.solutions.Solution
 import org.lwjgl.opengl.GL11C.glGetError
 
 /**

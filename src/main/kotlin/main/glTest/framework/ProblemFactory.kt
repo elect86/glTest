@@ -3,13 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main.apiTest.framework
+package main.glTest.framework
 
-import main.apiTest.problems.DynamicStreamingProblem
-import main.apiTest.problems.NullProblem
-import main.apiTest.problems.Problem
-import main.apiTest.problems.ObjectsProblem
-import main.apiTest.solutions.*
+import main.glTest.problems.DynamicStreamingProblem
+import main.glTest.problems.NullProblem
+import main.glTest.problems.Problem
+import main.glTest.problems.ObjectsProblem
+import main.glTest.solutions.*
 
 /**
  *

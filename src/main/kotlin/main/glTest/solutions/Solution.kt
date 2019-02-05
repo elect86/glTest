@@ -1,10 +1,10 @@
-package main.apiTest.solutions
+package main.glTest.solutions
 
 import glm_.func.rad
 import glm_.glm
 import glm_.mat4x4.Mat4
 import glm_.vec2.Vec2i
-import main.apiTest.framework.OpenGlApi
+import main.glTest.framework.OpenGlApi
 
 abstract class Solution {
 
