@@ -171,7 +171,7 @@ class ObjectsGLDrawLoop : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("shaders/objects", "draw-loop", fragment).name
+        program = GlslProgram.fromRoot("shaders/objects", "multi-draw-NoSDP", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1026,7 +1026,7 @@ class ObjectsGLDynamicBuffer : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "dynamic-buffer").name
+        program = GlslProgram.fromRoot("shaders/objects", "dynamic-buffer", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1035,9 +1035,6 @@ class ObjectsGLDynamicBuffer : ObjectsSolution() {
 
         glGenVertexArrays(vao)
         glBindVertexArray(vao)
-
-        val UB0 = glGetUniformBlockIndex(program, "UB0")
-        glUniformBlockBinding(program, UB0, semantic.uniform.CONSTANT)
 
         glGenBuffers(vb, ib, ub)
         glBindBuffer(GL_ARRAY_BUFFER, vb)
@@ -1054,7 +1051,7 @@ class ObjectsGLDynamicBuffer : ObjectsSolution() {
         // Program
         bindProgramAndSetViewProj()
 
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, ub)
+        glBindBufferBase(GL_UNIFORM_BUFFER, semantic.uniform.TRANSFORM1, ub)
 
         // Input Layout
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)
@@ -1102,7 +1099,7 @@ class ObjectsGLMapUnsynchronized : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "map").name
+        program = GlslProgram.fromRoot("shaders/objects", "map", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1120,10 +1117,10 @@ class ObjectsGLMapUnsynchronized : ObjectsSolution() {
         glVertexAttribPointer(glf.pos3_col3)
         glEnableVertexAttribArray(glf.pos3_col3)
 
-        val drawIds = IntBuffer(objectCount) { it }
-
         glBindBuffer(GL_ARRAY_BUFFER, drawId)
-        glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+        IntBuffer(objectCount) { it }.use { drawIds ->
+            glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+        }
         glVertexAttribIPointer(semantic.attr.DRAW_ID, 1, GL_UNSIGNED_INT, Int.BYTES, 0)
         glVertexAttribDivisor(semantic.attr.DRAW_ID, 1)
         glEnableVertexAttribArray(semantic.attr.DRAW_ID)
@@ -1132,7 +1129,7 @@ class ObjectsGLMapUnsynchronized : ObjectsSolution() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transformBuffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, semantic.storage.CONSTANT, transformBuffer)
 
         transformBufferSize = tripleBuffer * Mat4.size * objectCount
         glBufferData(GL_SHADER_STORAGE_BUFFER, transformBufferSize.L, GL_DYNAMIC_DRAW)
@@ -1205,7 +1202,7 @@ class ObjectsGLMapPersistent : ObjectsSolution() {
         }
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "map").name
+        program = GlslProgram.fromRoot("shaders/objects", "map", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1223,10 +1220,10 @@ class ObjectsGLMapPersistent : ObjectsSolution() {
         glVertexAttribPointer(glf.pos3_col3)
         glEnableVertexAttribArray(glf.pos3_col3)
 
-        val drawIds = IntBuffer(objectCount) { it }
-
         glBindBuffer(GL_ARRAY_BUFFER, drawId)
-        glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+        IntBuffer(objectCount) { it }.use { drawIds ->
+            glBufferData(GL_ARRAY_BUFFER, drawIds, GL_STATIC_DRAW)
+        }
         glVertexAttribIPointer(semantic.attr.DRAW_ID, 1, GL_UNSIGNED_INT, Int.BYTES, 0)
         glVertexAttribDivisor(semantic.attr.DRAW_ID, 1)
         glEnableVertexAttribArray(semantic.attr.DRAW_ID)
@@ -1234,7 +1231,7 @@ class ObjectsGLMapPersistent : ObjectsSolution() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transformBuffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, semantic.storage.CONSTANT, transformBuffer)
 
         transformBufferSize = tripleBuffer * Mat4.size * objectCount.L
         val flags: GLbitfield = GL_MAP_WRITE_BIT or GL_MAP_PERSISTENT_BIT or GL_MAP_COHERENT_BIT
@@ -1293,7 +1290,7 @@ class ObjectsGLTexCoord : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "tex-coord").name
+        program = GlslProgram.fromRoot("shaders/objects", "tex-coord", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -1329,12 +1326,12 @@ class ObjectsGLTexCoord : ObjectsSolution() {
         setCommonGlState()
 
         for (m in transforms) {
-            glVertexAttrib4f(2, m[0, 0], m[0, 1], m[0, 2], m[0, 3])
-            glVertexAttrib4f(3, m[1, 0], m[1, 1], m[1, 2], m[1, 3])
-            glVertexAttrib4f(4, m[2, 0], m[2, 1], m[2, 2], m[2, 3])
-            glVertexAttrib4f(5, m[3, 0], m[3, 1], m[3, 2], m[3, 3])
+            glVertexAttrib4f(semantic.attr.R0, m[0, 0], m[0, 1], m[0, 2], m[0, 3])
+            glVertexAttrib4f(semantic.attr.R1, m[1, 0], m[1, 1], m[1, 2], m[1, 3])
+            glVertexAttrib4f(semantic.attr.R2, m[2, 0], m[2, 1], m[2, 2], m[2, 3])
+            glVertexAttrib4f(semantic.attr.R3, m[3, 0], m[3, 1], m[3, 2], m[3, 3])
 
-            glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, NULL)
+            glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0)
         }
     }
 

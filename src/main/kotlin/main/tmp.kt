@@ -15,6 +15,11 @@ import java.nio.LongBuffer
 
 val semantic.storage.CONSTANT get() = 1
 
+val semantic.attr.R0 get() = 6
+val semantic.attr.R1 get() = 7
+val semantic.attr.R2 get() = 8
+val semantic.attr.R3 get() = 9
+
 inline fun glColorMask(mask: Boolean) = GL15C.glColorMask(mask, mask, mask, mask)
 
 fun glIsBuffer(buffer: IntBuffer) = GL15C.glIsBuffer(buffer[0])

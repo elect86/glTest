@@ -3,6 +3,10 @@
 #define POSITION    0
 #define COLOR       3
 #define DRAW_ID     5
+#define R0          6
+#define R1          7
+#define R2          8
+#define R3          9
 
 // Uniform
 #define TRANSFORM0  1
