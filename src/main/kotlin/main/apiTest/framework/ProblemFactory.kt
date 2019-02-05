@@ -61,7 +61,7 @@ class ProblemFactory(skipInit: Boolean) {
                     ObjectsGLMultiDrawBuffer(true),
                     ObjectsGLMultiDrawBuffer(false),
                     ObjectsGLBindless(),
-                    ObjectsGLBindlessIndirect(),
+//                    ObjectsGLBindlessIndirect(),
                     ObjectsGLBufferRange(),
                     ObjectsGLBufferStorage(true),
                     ObjectsGLBufferStorage(false),

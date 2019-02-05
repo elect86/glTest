@@ -30,9 +30,9 @@ class Buffer(cpuUpdates: Boolean) {
         bufferStorage = storage
         this.target = target
 
-        when (bufferStorage) {
+        bufferContents = when (bufferStorage) {
 
-            BufferStorage.SystemMemory -> bufferContents = ByteBuffer(atomsTotalSize)
+            BufferStorage.SystemMemory ->  ByteBuffer(atomsTotalSize)
 
             BufferStorage.PersistentlyMappedBuffer -> {
                 // This code currently doesn't care about the alignment of the returned memory. This could potentially
@@ -44,7 +44,7 @@ class Buffer(cpuUpdates: Boolean) {
                 glGenBuffers(name)
                 glBindBuffer(target, name)
                 glBufferStorage(target, atomsTotalSize.L, createFlags)
-                bufferContents = glMapBufferRange(target, 0, atomsTotalSize.L, mapFlags) ?: run {
+                glMapBufferRange(target, 0, atomsTotalSize.L, mapFlags) ?: run {
                     System.err.println("glMapBufferRange failed, probable bug.")
                     return false
                 }
@@ -92,7 +92,7 @@ class CircularBuffer(cpuUpdates: Boolean = true) {
         this.atomCount = atomCount
         head = 0
 
-        return buffer.create(storage, target, atomCount, createFlags, mapFlags)
+        return buffer.create(storage, target, atomSize * atomCount, createFlags, mapFlags)
     }
 
     fun destroy() {
@@ -102,7 +102,7 @@ class CircularBuffer(cpuUpdates: Boolean = true) {
         head = 0
     }
 
-    infix fun reserve(atomCount: Int): ByteBuffer {
+    infix fun reserve(atomCount: Int): Adr {
         if (atomCount > this.atomCount)
             System.err.println("Requested an update of size $atomCount for a buffer of size ${this.atomCount} atoms.")
 
@@ -112,7 +112,7 @@ class CircularBuffer(cpuUpdates: Boolean = true) {
             lockStart = 0   // Need to wrap here.
 
         buffer.waitForLockedRange(lockStart, atomCount.L)
-        return buffer.bufferContents!!.apply { pos = lockStart.i }
+        return buffer.bufferContents!!.adr + lockStart * atomSize
     }
 
     infix fun onUsageComplete(atomCount: Int)    {

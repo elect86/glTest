@@ -503,7 +503,7 @@ class ObjectsGLBindless : ObjectsSolution() {
 
         vbs = IntBuffer(objectCount)
         vboAddrs = LongBuffer(objectCount)
-        vboSizes = LongBuffer(objectCount) { vertices.data.cap.L }
+        vboSizes = LongBuffer(objectCount) { vertices.data.cap * Float.BYTES.L }
 
         glGenBuffers(ibs, vbs)
         for (u in 0 until objectCount) {
@@ -557,11 +557,15 @@ class ObjectsGLBindless : ObjectsSolution() {
             glDeleteBuffers(ibs)
             ibs.free()
         }
+        if (::ibAddrs.isInitialized) ibAddrs.free()
+        if (::ibSizes.isInitialized) ibSizes.free()
 
         if (::vbs.isInitialized) {
             glDeleteBuffers(vbs)
             vbs.free()
         }
+        if (::vboAddrs.isInitialized) vboAddrs.free()
+        if (::vboSizes.isInitialized) vboSizes.free()
 
         super.shutdown()
 
@@ -612,7 +616,7 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "bindless-indirect").name
+        program = GlslProgram.fromRoot("shaders/objects", "bindless-indirect", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -621,11 +625,11 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
 
         ibs = IntBuffer(objectCount)
         ibAddrs = LongBuffer(objectCount)
-        ibSizes = LongBuffer(objectCount)
+        ibSizes = LongBuffer(objectCount) { indices.cap * Short.BYTES.L }
 
         vbs = IntBuffer(objectCount)
         vboAddrs = LongBuffer(objectCount)
-        vboSizes = LongBuffer(objectCount)
+        vboSizes = LongBuffer(objectCount) { vertices.data.cap * Float.BYTES.L }
 
         commands = CommandNvBuffer(objectCount)
 
@@ -634,15 +638,13 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
         for (u in 0 until objectCount) {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibs[u])
             glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, indices, 0)
-            nglGetBufferParameterui64vNV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, ibAddrs.adr(u)) // TODO position()?
+            ibAddrs[u] = glGetBufferParameterui64NV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV)
             glMakeBufferResidentNV(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY)
-            ibSizes[u] = indices.cap * Short.BYTES
 
             glBindBuffer(GL_ARRAY_BUFFER, vbs[u])
             glBufferStorage(GL_ARRAY_BUFFER, vertices.data, 0)
-            nglGetBufferParameterui64vNV(GL_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, vboAddrs.adr(u))
+            vboAddrs[u] = glGetBufferParameterui64NV(GL_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV)
             glMakeBufferResidentNV(GL_ARRAY_BUFFER, GL_READ_ONLY)
-            vboSizes[u] = vertices.data.cap
         }
 
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, transformBuffer)
@@ -699,13 +701,13 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
                     length = ibSizes[i]
                 }
                 vertexBuffer0.apply {
-                    index = 0
+                    index = semantic.attr.POSITION
                     reserved = 0
                     address = vboAddrs[i] + 0
                     length = vboSizes[i] - 0
                 }
                 vertexBuffer1.apply {
-                    index = 1
+                    index = semantic.attr.COLOR
                     reserved = 0
                     address = vboAddrs[i] + Vec3.size
                     length = vboSizes[i] - Vec3.size
@@ -723,7 +725,7 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
         // resolveQueries();
 
         // glBeginQuery(GL_TIME_ELAPSED, m_queries[m_currentQueryIssue]);
-        nglMultiDrawElementsIndirectBindlessNV(GL_TRIANGLES, GL_UNSIGNED_SHORT, NULL, objCount, 0, 2) // TODO !native
+        nglMultiDrawElementsIndirectBindlessNV(GL_TRIANGLES, GL_UNSIGNED_SHORT, 0, objCount, Vec3.size * 2, 2) // TODO !native
         // glEndQuery(GL_TIME_ELAPSED);
 
         // m_currentQueryIssue = (m_currentQueryIssue + 1) % kQueryCount;
@@ -798,7 +800,7 @@ class ObjectsGLBufferRange : ObjectsSolution() {
             return false
 
         // Program
-        program = GlslProgram.fromRoot("/shaders/objects", "buffer-range").name
+        program = GlslProgram.fromRoot("shaders/objects", "buffer-range", fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -807,9 +809,6 @@ class ObjectsGLBufferRange : ObjectsSolution() {
 
         glGenVertexArrays(vao)
         glBindVertexArray(vao)
-
-        val UB0 = glGetUniformBlockIndex(program, "UB0")
-        glUniformBlockBinding(program, UB0, semantic.uniform.CONSTANT)
 
         glGenBuffers(vb, ib)
 
@@ -821,7 +820,7 @@ class ObjectsGLBufferRange : ObjectsSolution() {
 
         val uniformBufferOffsetAlignment = glGetInteger(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
         maxUniformBlockSize = glGetInteger(GL_MAX_UNIFORM_BLOCK_SIZE)
-        matrixStride = ceil(Mat4.size.i, uniformBufferOffsetAlignment)
+        matrixStride = ceil(Mat4.size, uniformBufferOffsetAlignment)
         maxBatchSize = maxUniformBlockSize / matrixStride
 
         val maxSupportedBatchSize = (64 * 64 * 64) min objectCount
@@ -872,7 +871,7 @@ class ObjectsGLBufferRange : ObjectsSolution() {
 
             for (i in 0 until batchCount) {
 
-                glBindBufferRange(GL_UNIFORM_BUFFER, 0, uniformBuffer[0], matrixStride * i.L, Mat4.size.L)
+                glBindBufferRange(GL_UNIFORM_BUFFER, semantic.storage.CONSTANT, uniformBuffer[0], matrixStride * i.L, Mat4.size.L)
 
                 glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, NULL)
             }
@@ -915,11 +914,11 @@ class ObjectsGLBufferStorage(
         }
 
         // Program
-        val shader = "buffer-storage-${when (drawId) {
+        val vertex = "buffer-storage-${when (drawId) {
             null -> "SDP"
             else -> "NoSDP"
         }}"
-        program = GlslProgram.fromRoot("/shaders/objects", shader).name
+        program = GlslProgram.fromRoot("shaders/objects", vertex, fragment).name
 
         if (program == 0) {
             System.err.println("Unable to initialize solution '$name', shader compilation/linking failed.")
@@ -973,19 +972,19 @@ class ObjectsGLBufferStorage(
 
         setCommonGlState()
 
-        val dstCmds = DrawElementsIndirectCommandBuffer(commands reserve xformCount)
+        val dstCmds = commands reserve xformCount
         for (u in 0 until xformCount)
-            dstCmds[u].apply {
+            DrawElementsIndirectCommand(dstCmds + u * DrawElementsIndirectCommand.size).apply {
                 count = indexCount
                 instanceCount = 1
                 firstIndex = 0
                 baseVertex = 0
                 baseInstance = if (drawId == null) 0 else u
             }
-        val dstTransforms = Mat4Buffer(transformBuffer reserve xformCount)
-        memCopy(transforms.data, dstTransforms.data)
+        val dstTransforms = transformBuffer reserve xformCount
+        memCopy(transforms.data.adr, dstTransforms, Mat4.size * xformCount.L)
 
-        transformBuffer.bindBufferRange(0, Mat4.size, xformCount)
+        transformBuffer.bindBufferRange(semantic.storage.CONSTANT, Mat4.size, xformCount)
 
         // We didn't use MAP_COHERENT here.
         glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT)

@@ -6,6 +6,7 @@ import gln.glf.semantic
 import kool.*
 import org.lwjgl.opengl.GL15C
 import org.lwjgl.opengl.GL30C
+import org.lwjgl.system.MemoryUtil.memByteBuffer
 import org.lwjgl.system.MemoryUtil.memIntBuffer
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
@@ -103,6 +104,7 @@ fun glDeleteBuffers(
     GL15C.glDeleteBuffers(buffers4)
 }
 
+fun DrawElementsIndirectCommand(adr: Adr) = DrawElementsIndirectCommand(memByteBuffer(adr, DrawElementsIndirectCommand.size))
 fun DrawElementsIndirectCommand(data: ByteBuffer) = DrawElementsIndirectCommand(data.asIntBuffer())
 
 inline class DrawElementsIndirectCommand(val data: IntBuffer) {

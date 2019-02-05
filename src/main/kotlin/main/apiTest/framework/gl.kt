@@ -94,6 +94,7 @@ abstract class OpenGLBase {
         if (DEBUG) {
             glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, null as IntBuffer?, true)
             glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, null as IntBuffer?, false)
+            glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW, null as IntBuffer?, false)
 //            glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DEBUG_SEVERITY_LOW, 0, false)
             errorCallback = GLUtil.setupDebugMessageCallback()
             glEnable(GL_DEBUG_OUTPUT)
