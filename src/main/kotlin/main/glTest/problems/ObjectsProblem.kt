@@ -14,12 +14,12 @@ import java.nio.ShortBuffer
 
 const val DRAW_SINGLE_TRIANGLE = false
 
-const val objectsX = 64
-const val objectsY = 64
-const val objectsZ = 64
-const val objectCount = objectsX * objectsY * objectsZ
+const val objectsAX = 64
+const val objectsAY = 64
+const val objectsAZ = 64
+const val objectACount = objectsAX * objectsAY * objectsAZ
 
-const val transformCount = objectCount
+const val transformACount = objectACount
 val vertexCount = if (DRAW_SINGLE_TRIANGLE) 3 else 8
 val indexCount = if (DRAW_SINGLE_TRIANGLE) 3 else 36
 
@@ -48,6 +48,7 @@ fun VertexBufferA(size: Int, block: (Int) -> VertexA): VertexBufferA {
 
 inline class VertexBufferA(val data: FloatBuffer) {
 
+    fun free() = data.free()
 //    val size get() = data.cap / (Vec3.size * 2)
 }
 
@@ -66,7 +67,7 @@ class ObjectsProblem : Problem() {
 
     override fun init(): Boolean {
         genUnitCube()
-        transforms = Mat4Buffer(transformCount)
+        transforms = Mat4Buffer(transformACount)
 
         return true
     }
@@ -74,18 +75,16 @@ class ObjectsProblem : Problem() {
     override fun render() {
         update()
 
-        activeSolution?.let {
-            (it as ObjectsSolution).render(transforms!!)
-        }
+        (activeSolution as? ObjectsSolution)?.render(transforms!!)
     }
 
     override fun shutdown() {
         super.shutdown()
 
         indices.clear()
-        vertices!!.data.free()
+        vertices!!.free()
         vertices = null
-        transforms!!.data.free()
+        transforms!!.free()
         transforms = null
     }
 
@@ -98,7 +97,7 @@ class ObjectsProblem : Problem() {
 
         activeSolution?.let { sol ->
             println("Solution ${sol.name} - Initializing.")
-            return (sol as ObjectsSolution).init(vertices!!, indices, objectCount).also { ret ->
+            return (sol as ObjectsSolution).init(vertices!!, indices).also { ret ->
                 println("Solution ${sol.name} - Initialize complete (Success: $ret).")
             }
         }
@@ -111,14 +110,15 @@ class ObjectsProblem : Problem() {
         val angle = iteration * 0.01f
 
         var mIdx = 0
-        for (x in 0 until objectsX) {
-            for (y in 0 until objectsY) {
-                for (z in 0 until objectsZ) {
+        for (x in 0 until objectsAX) {
+            for (y in 0 until objectsAY) {
+                for (z in 0 until objectsAZ) {
                     transforms!!.matrixRotationZ(mIdx, angle)
                     transforms!!.data
-                            .put(mIdx * Mat4.length + 12, 2f * x - objectsX)
-                            .put(mIdx * Mat4.length + 13, 2f * y - objectsY)
-                            .put(mIdx++ * Mat4.length + 14, 2f * z - objectsZ)
+                            .put(mIdx * Mat4.length + 12, 2f * x - objectsAX)
+                            .put(mIdx * Mat4.length + 13, 2f * y - objectsAY)
+                            .put(mIdx * Mat4.length + 14, 2f * z - objectsAZ)
+                    mIdx++
                 }
             }
         }

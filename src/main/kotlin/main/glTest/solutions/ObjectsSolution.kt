@@ -18,6 +18,7 @@ import main.*
 import main.glTest.Mat4Buffer
 import main.glTest.framework.*
 import main.glTest.problems.VertexBufferA
+import main.glTest.problems.objectACount
 import org.lwjgl.opengl.GL11.glDisableClientState
 import org.lwjgl.opengl.GL11.glEnableClientState
 import org.lwjgl.opengl.GL20C.glUseProgram
@@ -36,7 +37,7 @@ import java.nio.*
 
 abstract class ObjectsSolution : Solution() {
 
-    var objectCount = 0
+    var objectCount = objectACount
     var indexCount = 0
 
     val ib = IntBuffer(1)
@@ -46,11 +47,8 @@ abstract class ObjectsSolution : Solution() {
 
     var program = 0
 
-    open fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
-
-        this.objectCount = objectCount
-        indexCount = indices.rem
-
+    open fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
+        indexCount = indices.cap
         return true
     }
 
@@ -104,9 +102,9 @@ abstract class ObjectsSolution : Solution() {
 
 class ObjectsGLUniform : ObjectsSolution() {
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program
@@ -165,9 +163,9 @@ class ObjectsGLDrawLoop : ObjectsSolution() {
     val drawId = IntBuffer(1)
     val transformBuffer = IntBuffer(1)
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program
@@ -244,9 +242,9 @@ class ObjectsGLMultiDraw(
 
     var commands: DrawElementsIndirectCommandBuffer? = null
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         if (drawId == null && !caps.GL_ARB_shader_draw_parameters) {
@@ -357,9 +355,9 @@ class ObjectsGLMultiDrawBuffer(
     var commands: DrawElementsIndirectCommandBuffer? = null
     val cmdBuffer = IntBuffer(1)
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         if (drawId == null && !caps.GL_ARB_shader_draw_parameters) {
@@ -473,7 +471,7 @@ class ObjectsGLBindless : ObjectsSolution() {
     lateinit var vboAddrs: LongBuffer
     lateinit var vboSizes: LongBuffer
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
         if (caps.glBufferStorage == NULL) {
             System.err.println("Unable to initialize solution '$name', glBufferStorage() unavailable.")
@@ -485,7 +483,7 @@ class ObjectsGLBindless : ObjectsSolution() {
             return false
         }
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program
@@ -600,7 +598,7 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
     val cmdBuffer = IntBuffer(1)
     var cmdPtr: ByteBuffer? = null
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
         if (caps.glBufferStorage == NULL) {
             System.err.println("Unable to initialize solution '$name', glBufferStorage() unavailable.")
@@ -612,7 +610,7 @@ class ObjectsGLBindlessIndirect : ObjectsSolution() {
             return false
         }
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program
@@ -794,9 +792,9 @@ class ObjectsGLBufferRange : ObjectsSolution() {
 
     lateinit var storage: ByteBuffer
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program
@@ -898,14 +896,14 @@ class ObjectsGLBufferStorage(
     val transformBuffer = CircularBuffer(true)
     val commands = CircularBuffer(true)
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
         if (caps.glBufferStorage == NULL) {
             System.err.println("Unable to initialize solution '$name', glBufferStorage() unavailable.")
             return false
         }
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         if (drawId == null && !caps.GL_ARB_shader_draw_parameters) {
@@ -1020,9 +1018,9 @@ class ObjectsGLDynamicBuffer : ObjectsSolution() {
 
     val ub = IntBuffer(1)
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program
@@ -1093,9 +1091,9 @@ class ObjectsGLMapUnsynchronized : ObjectsSolution() {
 
     val bufferLockManager = BufferLockManager(true)
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program
@@ -1191,9 +1189,9 @@ class ObjectsGLMapPersistent : ObjectsSolution() {
 
     var transformDataPtr: ByteBuffer? = null
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         if (caps.glBufferStorage == NULL) {
@@ -1284,9 +1282,9 @@ class ObjectsGLMapPersistent : ObjectsSolution() {
 
 class ObjectsGLTexCoord : ObjectsSolution() {
 
-    override fun init(vertices: VertexBufferA, indices: ShortBuffer, objectCount: Int): Boolean {
+    override fun init(vertices: VertexBufferA, indices: ShortBuffer): Boolean {
 
-        if (!super.init(vertices, indices, objectCount))
+        if (!super.init(vertices, indices))
             return false
 
         // Program

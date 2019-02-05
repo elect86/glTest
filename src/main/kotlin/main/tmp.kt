@@ -4,6 +4,7 @@ import glm_.BYTES
 import glm_.mat4x4.Mat4
 import gln.glf.semantic
 import kool.*
+import org.lwjgl.opengl.GL11C
 import org.lwjgl.opengl.GL15C
 import org.lwjgl.opengl.GL30C
 import org.lwjgl.system.MemoryUtil.memByteBuffer
@@ -26,6 +27,7 @@ fun glIsBuffer(buffer: IntBuffer) = GL15C.glIsBuffer(buffer[0])
 fun glIsVertexArray(vao: IntBuffer) = GL30C.glIsVertexArray(vao[0])
 
 fun glBindBuffer(target: Int, buffer: IntBuffer) = GL15C.glBindBuffer(target, buffer[0])
+fun glBindTexture(target: Int, texture: IntBuffer) = GL11C.glBindTexture(target, texture[0])
 
 fun glBindBufferBase(target: Int, index: Int, buffer: IntBuffer) = GL30C.glBindBufferBase(target, index, buffer[0])
 

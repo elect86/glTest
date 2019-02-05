@@ -5,10 +5,7 @@
  */
 package main.glTest.framework
 
-import main.glTest.problems.DynamicStreamingProblem
-import main.glTest.problems.NullProblem
-import main.glTest.problems.Problem
-import main.glTest.problems.ObjectsProblem
+import main.glTest.problems.*
 import main.glTest.solutions.*
 
 /**
@@ -73,13 +70,14 @@ class ProblemFactory(skipInit: Boolean) {
             newProb.shutdown()
 
         // Textured Quads
-//        newProb = TexturedQuadsProblem ()
-//        if (_skipInit || newProb->Init()) {
-//            if (!_skipInit) { newProb ->
-//                Shutdown()
-//            }
-//            mProblems.push_back(newProb)
-//            mSolutions[mProblems.back()->GetName()].push_back(new TexturedQuadsGLBindless())
+        newProb = TexturedQuadsProblem ()
+        if (skipInit || newProb.init()) {
+            if (!skipInit)
+                newProb.shutdown()
+
+            problems += newProb
+            solutions[newProb.name] = arrayOf<Solution>(
+                    TexturedQuadsGLBindless())
 //            mSolutions[mProblems.back()->GetName()].push_back(new TexturedQuadsGLBindlessMultiDraw())
 //            mSolutions[mProblems.back()->GetName()].push_back(new TexturedQuadsGLNaive())
 //            mSolutions[mProblems.back()->GetName()].push_back(new TexturedQuadsGLNaiveUniform())
@@ -97,11 +95,10 @@ class ProblemFactory(skipInit: Boolean) {
 //            #if WITH_D3D11
 //            mSolutions[mProblems.back()->GetName()].push_back(new TexturedQuadsD3D11Naive())
 //            #endif
-//
-//        } else { newProb ->
-//            Shutdown()
-//            SafeDelete(newProb)
-//        }
+        } else {
+            newProb.shutdown()
+            newProb.destroy()
+        }
     }
 
     fun getSolutions(problem: Problem, activeApi: OpenGLBase? = null): Array<Solution> {
